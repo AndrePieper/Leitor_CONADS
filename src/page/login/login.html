@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - CONADSI 2026</title>
+    <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+    <main class="container-login">
+        <div class="cartao-login">
+            <div class="marca">
+                <div class="titulo-marca">CONADSI<br />2026</div>
+                <div class="logos-marca">
+                    <span>UNIFASIPE</span>
+                    <span>Análise e Desenv.<br />de Sistemas</span>
+                </div>
+            </div>
+
+            <div class="painel-formulario">
+                <h2>Acesso ao Sistema</h2>
+                <div class="grupo-entrada">
+                    <label for="entrada-usuario">Email</label>
+                    <input 
+                        id="entrada-usuario" 
+                        type="email" 
+                        placeholder="Digite seu email" 
+                        class="campo-texto"
+                    />
+                </div>
+
+                <div class="grupo-entrada">
+                    <label for="entrada-senha">Senha</label>
+                    <input 
+                        id="entrada-senha" 
+                        type="password" 
+                        placeholder="Digite sua senha" 
+                        class="campo-texto"
+                    />
+                </div>
+
+                <button id="botao-entrar" class="botao-primario">
+                    Entrar no Sistema
+                </button>
+
+                <div class="mensagem-erro" id="mensagem-erro"></div>
+            </div>
+
+            <div class="rodape-login">
+                <p>© 2026 CONADSI - Todos os direitos reservados</p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="login.js"></script>
+</body>
+</html>
