@@ -104,7 +104,7 @@ async function realizarRedirecionamentoParaHome(dadosResposta, email) {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // Redirecionar para a página inicial
-    window.location.href = '../home/home.html';
+    window.location.href = '/home.html';
 }
 
 function limparCampos() {
