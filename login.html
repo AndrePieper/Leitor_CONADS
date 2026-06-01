@@ -4,11 +4,55 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - CONADSI 2026</title>
-    <link rel="stylesheet" href="src/page/login/login.css" />
+    <link rel="stylesheet" href="src/paginas/login/estilo_login.css" />
     <link rel="icon" href="/favicon.ico" />
-    <style>body{margin:0}</style>
 </head>
 <body>
-    <iframe src="src/page/login/login.html" style="width:100%;height:100vh;border:0;"></iframe>
+    <main class="container-login">
+        <div class="cartao-login">
+            <div class="marca">
+                <div class="titulo-marca">CONADSI<br />2026</div>
+                <div class="logos-marca">
+                    <span>UNIFASIPE</span>
+                    <span>Análise e Desenv.<br />de Sistemas</span>
+                </div>
+            </div>
+
+            <div class="painel-formulario">
+                <h2>Acesso ao Sistema</h2>
+                <div class="grupo-entrada">
+                    <label for="entrada-usuario">Usuário</label>
+                    <input 
+                        id="entrada-usuario" 
+                        type="text" 
+                        placeholder="Digite seu usuário" 
+                        class="campo-texto"
+                    />
+                </div>
+
+                <div class="grupo-entrada">
+                    <label for="entrada-senha">Senha</label>
+                    <input 
+                        id="entrada-senha" 
+                        type="password" 
+                        placeholder="Digite sua senha" 
+                        class="campo-texto"
+                    />
+                </div>
+
+                <button id="botao-entrar" class="botao-primario">
+                    Entrar no Sistema
+                </button>
+
+                <div class="mensagem-erro" id="mensagem-erro"></div>
+            </div>
+
+            <div class="rodape-login">
+                <p>© 2026 CONADSI - Todos os direitos reservados</p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="src/paginas/login/script_login.js"></script>
 </body>
 </html>

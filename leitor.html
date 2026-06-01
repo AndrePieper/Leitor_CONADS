@@ -3,12 +3,132 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Leitor - CONADSI 2026</title>
-    <link rel="stylesheet" href="src/page/leitor/leitor.css" />
+    <title>Leitor de Documentos - CONADSI 2026</title>
+    <link rel="stylesheet" href="src/paginas/leitor/estilo_leitor.css" />
 </head>
 <body>
-    <div id="root">
-        <iframe src="src/page/leitor/leitor.html" style="width:100%;height:100vh;border:0;"></iframe>
+    <div class="interface-leitor">
+        <header class="barra-superior-leitor">
+            <div class="conteudo-barra">
+                <button id="botao-voltar" class="botao-voltar" title="Voltar para tela anterior">
+                    ← Voltar
+                </button>
+                <h1>Leitor de Documentos CONADSI</h1>
+                <div class="info-usuario-leitor">
+                    <span id="usuario-leitor-info"></span>
+                </div>
+            </div>
+        </header>
+
+        <main class="area-principal-leitor">
+            <aside class="painel-lateral-leitor">
+                <div class="secao-upload">
+                    <h3>Carregar Documento</h3>
+                    <input 
+                        type="file" 
+                        id="entrada-arquivo" 
+                        class="entrada-arquivo"
+                        accept=".pdf,.docx,.txt,.jpg,.png"
+                    />
+                    <label for="entrada-arquivo" class="botao-upload">
+                        📁 Selecionar Arquivo
+                    </label>
+                    <p class="ajuda-upload">
+                        Formatos aceitos: PDF, DOCX, TXT, JPG, PNG
+                    </p>
+                </div>
+
+                <div class="secao-documentos">
+                    <h3>Documentos Carregados</h3>
+                    <div id="lista-documentos" class="lista-documentos">
+                        <p class="vazio">Nenhum documento carregado</p>
+                    </div>
+                </div>
+
+                <div class="secao-ferramentas">
+                    <h3>Ferramentas</h3>
+                    <button id="botao-zoom-aumentar" class="botao-ferramenta">
+                        🔍+ Aumentar
+                    </button>
+                    <button id="botao-zoom-diminuir" class="botao-ferramenta">
+                        🔍- Diminuir
+                    </button>
+                    <button id="botao-rotacionar" class="botao-ferramenta">
+                        🔄 Girar
+                    </button>
+                    <button id="botao-download" class="botao-ferramenta" disabled>
+                        ⬇️ Download
+                    </button>
+                </div>
+            </aside>
+
+            <section class="area-visualizacao-leitor">
+                <div id="area-documento" class="area-documento">
+                    <div class="placeholder-documento">
+                        <div class="icone-placeholder">📄</div>
+                        <p>Selecione um documento para visualizar</p>
+                    </div>
+                </div>
+
+                <div class="controles-navegacao">
+                    <button 
+                        id="botao-pagina-anterior" 
+                        class="botao-pagina"
+                        disabled
+                    >
+                        ◀ Anterior
+                    </button>
+                    <div class="indicador-pagina">
+                        <span id="pagina-atual">0</span>
+                        /
+                        <span id="total-paginas">0</span>
+                    </div>
+                    <button 
+                        id="botao-proxima-pagina" 
+                        class="botao-pagina"
+                        disabled
+                    >
+                        Próxima ▶
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <aside class="painel-direito-leitor">
+            <div class="secao-informacoes-documento">
+                <h3>Informações do Documento</h3>
+                <div class="info-item">
+                    <span class="label-info">Nome:</span>
+                    <span id="info-nome-doc" class="valor-info">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="label-info">Tipo:</span>
+                    <span id="info-tipo-doc" class="valor-info">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="label-info">Tamanho:</span>
+                    <span id="info-tamanho-doc" class="valor-info">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="label-info">Data Carregamento:</span>
+                    <span id="info-data-doc" class="valor-info">—</span>
+                </div>
+            </div>
+
+            <div class="secao-anotacoes">
+                <h3>Anotações</h3>
+                <textarea 
+                    id="area-anotacoes" 
+                    class="campo-anotacoes"
+                    placeholder="Adicione suas anotações aqui..."
+                ></textarea>
+                <button id="botao-salvar-anotacoes" class="botao-acao">
+                    💾 Salvar Anotações
+                </button>
+            </div>
+        </aside>
     </div>
+
+    <script type="module" src="src/paginas/leitor/script_leitor.js"></script>
 </body>
 </html>

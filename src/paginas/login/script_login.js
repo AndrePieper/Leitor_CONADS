@@ -71,7 +71,7 @@ function realizarRedirecionamentoParaHome(nomeUsuario) {
     armazenarDadosSessao(nomeUsuario);
 
     // Redirecionar para a página inicial
-    window.location.href = '../home/pagina_home.html';
+    window.location.href = '/home.html';
 }
 
 function armazenarDadosSessao(nomeUsuario) {
