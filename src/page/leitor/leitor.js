@@ -1,5 +1,5 @@
-// ============================================
-// Importações
+﻿// ============================================
+// ImportaÃ§Ãµes
 // ============================================
 
 import { verificarAutenticacao, fazerRequisicaoPost, CONFIG_API } from '../../utils/api.js';
@@ -20,30 +20,30 @@ const botaoPararScanner = document.getElementById('botao-parar-scanner');
 const videoScanner = document.getElementById('video-scanner');
 const mensagemScanner = document.getElementById('mensagem-scanner');
 
-// Botões de ferramentas
+// BotÃµes de ferramentas
 const botaoZoomAumentar = document.getElementById('botao-zoom-aumentar');
 const botaoZoomDiminuir = document.getElementById('botao-zoom-diminuir');
 const botaoRotacionar = document.getElementById('botao-rotacionar');
 const botaoDownload = document.getElementById('botao-download');
 
-// Controles de navegação
+// Controles de navegaÃ§Ã£o
 const botaoPaginaAnterior = document.getElementById('botao-pagina-anterior');
 const botaoProximaPagina = document.getElementById('botao-proxima-pagina');
 const paginaAtualElemento = document.getElementById('pagina-atual');
 const totalPaginasElemento = document.getElementById('total-paginas');
 
-// Informações do documento
+// InformaÃ§Ãµes do documento
 const infoNomeDoc = document.getElementById('info-nome-doc');
 const infoTipoDoc = document.getElementById('info-tipo-doc');
 const infoTamanhoDoc = document.getElementById('info-tamanho-doc');
 const infoDataDoc = document.getElementById('info-data-doc');
 
-// Anotações
+// AnotaÃ§Ãµes
 const areaAnotacoes = document.getElementById('area-anotacoes');
 const botaoSalvarAnotacoes = document.getElementById('botao-salvar-anotacoes');
 
 // ============================================
-// Estado da Aplicação
+// Estado da AplicaÃ§Ã£o
 // ============================================
 
 const estadoLeitor = {
@@ -83,7 +83,7 @@ async function enviarPresencaCongresso(idChamada) {
     const idAluno = sessionStorage.getItem('usuarioId') || sessionStorage.getItem('usuarioLogado');
 
     if (!idAluno) {
-        mostrarMensagemScanner('ID do aluno não encontrado. Faça login novamente.', 'erro');
+        mostrarMensagemScanner('ID do aluno nÃ£o encontrado. FaÃ§a login novamente.', 'erro');
         return;
     }
 
@@ -96,10 +96,10 @@ async function enviarPresencaCongresso(idChamada) {
 
     try {
         await fazerRequisicaoPost(CONFIG_API.ENDPOINTS.PRESENCA_CONGRESSO, dadosPresenca);
-        mostrarMensagemScanner('Presença registrada com sucesso!', 'sucesso');
+        mostrarMensagemScanner('PresenÃ§a registrada com sucesso!', 'sucesso');
     } catch (erro) {
-        mostrarMensagemScanner(erro.mensagem || 'Erro ao enviar presença.', 'erro');
-        console.error('Erro ao enviar presença:', erro);
+        mostrarMensagemScanner(erro.mensagem || 'Erro ao enviar presenÃ§a.', 'erro');
+        console.error('Erro ao enviar presenÃ§a:', erro);
     }
 }
 
@@ -144,7 +144,7 @@ async function processarFrameQRCode() {
                 return;
             }
 
-            mostrarMensagemScanner('QR detectado, mas não foi possível extrair o id_chamada.', 'erro');
+            mostrarMensagemScanner('QR detectado, mas nÃ£o foi possÃ­vel extrair o id_chamada.', 'erro');
         }
     }
 
@@ -153,7 +153,7 @@ async function processarFrameQRCode() {
 
 async function iniciarScannerQRCode() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        mostrarMensagemScanner('Navegador não suporta câmera.', 'erro');
+        mostrarMensagemScanner('Navegador nÃ£o suporta cÃ¢mera.', 'erro');
         return;
     }
 
@@ -166,16 +166,21 @@ async function iniciarScannerQRCode() {
         botaoIniciarScanner.disabled = true;
         botaoPararScanner.disabled = false;
 
-        mostrarMensagemScanner('Câmera ativada. Aponte para o QR code.', 'info');
+        mostrarMensagemScanner('CÃ¢mera ativada. Aponte para o QR code.', 'info');
         requestAnimationFrame(processarFrameQRCode);
     } catch (erro) {
-        mostrarMensagemScanner('Não foi possível acessar a câmera. Verifique permissões.', 'erro');
+        mostrarMensagemScanner('NÃ£o foi possÃ­vel acessar a cÃ¢mera. Verifique permissÃµes.', 'erro');
         console.error('Erro ao iniciar scanner:', erro);
     }
 }
 
+async function solicitarPermissaoCameraEIniciar() {
+    mostrarMensagemScanner('Solicitando permissÃ£o para abrir a cÃ¢mera...', 'info');
+    await iniciarScannerQRCode();
+}
+
 // ============================================
-// Funções de Autenticação
+// FunÃ§Ãµes de AutenticaÃ§Ã£o
 // ============================================
 
 function verificarAutenticacaoLeitor() {
@@ -194,7 +199,7 @@ function redirecionarParaLogin() {
 }
 
 // ============================================
-// Funções de Upload de Arquivo
+// FunÃ§Ãµes de Upload de Arquivo
 // ============================================
 
 function procesarArquivoSelecionado(evento) {
@@ -204,13 +209,13 @@ function procesarArquivoSelecionado(evento) {
 
     // Validar tipo de arquivo
     if (!validarTipoArquivo(arquivo)) {
-        alert('Tipo de arquivo não suportado!');
+        alert('Tipo de arquivo nÃ£o suportado!');
         return;
     }
 
-    // Validar tamanho (máximo 10MB)
+    // Validar tamanho (mÃ¡ximo 10MB)
     if (arquivo.size > 10 * 1024 * 1024) {
-        alert('Arquivo muito grande! Máximo: 10MB');
+        alert('Arquivo muito grande! MÃ¡ximo: 10MB');
         return;
     }
 
@@ -240,7 +245,7 @@ function adicionarDocumentoCarregado(arquivo) {
 }
 
 // ============================================
-// Funções de Gerenciamento de Documentos
+// FunÃ§Ãµes de Gerenciamento de Documentos
 // ============================================
 
 function atualizarListaDocumentos() {
@@ -288,7 +293,7 @@ function exibirDocumento() {
     if (!estadoLeitor.documentoAtual) {
         areaDocumento.innerHTML = `
             <div class="placeholder-documento">
-                <div class="icone-placeholder">📄</div>
+                <div class="icone-placeholder">ðŸ“„</div>
                 <p>Selecione um documento para visualizar</p>
             </div>
         `;
@@ -297,7 +302,7 @@ function exibirDocumento() {
 
     const { nome, tipo, arquivo } = estadoLeitor.documentoAtual;
 
-    // Simular visualização do documento
+    // Simular visualizaÃ§Ã£o do documento
     if (tipo.includes('image')) {
         const leitorArquivo = new FileReader();
         leitorArquivo.onload = (e) => {
@@ -309,10 +314,10 @@ function exibirDocumento() {
     } else {
         areaDocumento.innerHTML = `
             <div style="text-align: center; color: #999;">
-                <div style="font-size: 48px; margin-bottom: 20px;">📄</div>
+                <div style="font-size: 48px; margin-bottom: 20px;">ðŸ“„</div>
                 <p>${nome}</p>
                 <p style="font-size: 12px; margin-top: 10px;">Tipo: ${tipo}</p>
-                <p style="font-size: 12px; color: #ccc;">Visualização de ${tipo} não suportada no navegador</p>
+                <p style="font-size: 12px; color: #ccc;">VisualizaÃ§Ã£o de ${tipo} nÃ£o suportada no navegador</p>
             </div>
         `;
     }
@@ -320,10 +325,10 @@ function exibirDocumento() {
 
 function atualizarInformacoesDocumento() {
     if (!estadoLeitor.documentoAtual) {
-        infoNomeDoc.textContent = '—';
-        infoTipoDoc.textContent = '—';
-        infoTamanhoDoc.textContent = '—';
-        infoDataDoc.textContent = '—';
+        infoNomeDoc.textContent = 'â€”';
+        infoTipoDoc.textContent = 'â€”';
+        infoTamanhoDoc.textContent = 'â€”';
+        infoDataDoc.textContent = 'â€”';
         return;
     }
 
@@ -338,7 +343,7 @@ function atualizarInformacoesDocumento() {
 }
 
 // ============================================
-// Funções de Ferramentas
+// FunÃ§Ãµes de Ferramentas
 // ============================================
 
 function aumentarZoom() {
@@ -371,7 +376,7 @@ function baixarDocumento() {
 }
 
 // ============================================
-// Funções de Navegação de Páginas
+// FunÃ§Ãµes de NavegaÃ§Ã£o de PÃ¡ginas
 // ============================================
 
 function atualizarControlesNavegacao() {
@@ -402,7 +407,7 @@ function irParaProximaPagina() {
 }
 
 // ============================================
-// Funções de Anotações
+// FunÃ§Ãµes de AnotaÃ§Ãµes
 // ============================================
 
 function salvarAnotacoes() {
@@ -412,7 +417,7 @@ function salvarAnotacoes() {
     const chaveArmazenamento = `anotacoes_${estadoLeitor.documentoAtual.id}`;
 
     localStorage.setItem(chaveArmazenamento, anotacaoTexto);
-    alert('Anotações salvas com sucesso!');
+    alert('AnotaÃ§Ãµes salvas com sucesso!');
 }
 
 function carregarAnotacoes() {
@@ -427,7 +432,7 @@ function carregarAnotacoes() {
 }
 
 // ============================================
-// Funções Utilitárias
+// FunÃ§Ãµes UtilitÃ¡rias
 // ============================================
 
 function formatarTamanhoArquivo(bytes) {
@@ -443,7 +448,7 @@ function truncarTexto(texto, limite) {
 }
 
 // ============================================
-// Funções de Inicialização
+// FunÃ§Ãµes de InicializaÃ§Ã£o
 // ============================================
 
 function inicializarEventosLeitor() {
@@ -456,26 +461,26 @@ function inicializarEventosLeitor() {
     botaoRotacionar.addEventListener('click', rotacionarDocumento);
     botaoDownload.addEventListener('click', baixarDocumento);
 
-    // Navegação
+    // NavegaÃ§Ã£o
     botaoPaginaAnterior.addEventListener('click', irParaPaginaAnterior);
     botaoProximaPagina.addEventListener('click', irParaProximaPagina);
 
-    // Anotações
+    // AnotaÃ§Ãµes
     botaoSalvarAnotacoes.addEventListener('click', salvarAnotacoes);
 
     // Voltar
     botaoVoltar.addEventListener('click', () => {
-        window.location.href = '../home/home.html';
+        window.location.href = '/home.html';
     });
 
-    // Carregar anotações ao selecionar documento
+    // Carregar anotaÃ§Ãµes ao selecionar documento
     const observadorDocumento = new MutationObserver(() => {
         carregarAnotacoes();
     });
 }
 
 function inicializarPaginaLeitor() {
-    // Verificar autenticação
+    // Verificar autenticaÃ§Ã£o
     if (!verificarAutenticacaoLeitor()) {
         return;
     }
@@ -486,16 +491,19 @@ function inicializarPaginaLeitor() {
     // Exibir placeholder inicial
     exibirDocumento();
     atualizarControlesNavegacao();
+
+    // Solicitar permissão e abrir câmera automaticamente
+    solicitarPermissaoCameraEIniciar();
 }
 
 // ============================================
-// Execução Inicial
+// ExecuÃ§Ã£o Inicial
 // ============================================
 
 document.addEventListener('DOMContentLoaded', inicializarPaginaLeitor);
 
 // ============================================
-// Funções de Upload de Arquivo
+// FunÃ§Ãµes de Upload de Arquivo
 // ============================================
 
 function procesarArquivoSelecionado(evento) {
@@ -505,13 +513,13 @@ function procesarArquivoSelecionado(evento) {
 
     // Validar tipo de arquivo
     if (!validarTipoArquivo(arquivo)) {
-        alert('Tipo de arquivo não suportado!');
+        alert('Tipo de arquivo nÃ£o suportado!');
         return;
     }
 
-    // Validar tamanho (máximo 10MB)
+    // Validar tamanho (mÃ¡ximo 10MB)
     if (arquivo.size > 10 * 1024 * 1024) {
-        alert('Arquivo muito grande! Máximo: 10MB');
+        alert('Arquivo muito grande! MÃ¡ximo: 10MB');
         return;
     }
 
@@ -541,7 +549,7 @@ function adicionarDocumentoCarregado(arquivo) {
 }
 
 // ============================================
-// Funções de Gerenciamento de Documentos
+// FunÃ§Ãµes de Gerenciamento de Documentos
 // ============================================
 
 function atualizarListaDocumentos() {
@@ -589,7 +597,7 @@ function exibirDocumento() {
     if (!estadoLeitor.documentoAtual) {
         areaDocumento.innerHTML = `
             <div class="placeholder-documento">
-                <div class="icone-placeholder">📄</div>
+                <div class="icone-placeholder">ðŸ“„</div>
                 <p>Selecione um documento para visualizar</p>
             </div>
         `;
@@ -598,7 +606,7 @@ function exibirDocumento() {
 
     const { nome, tipo, arquivo } = estadoLeitor.documentoAtual;
 
-    // Simular visualização do documento
+    // Simular visualizaÃ§Ã£o do documento
     if (tipo.includes('image')) {
         const leitorArquivo = new FileReader();
         leitorArquivo.onload = (e) => {
@@ -610,10 +618,10 @@ function exibirDocumento() {
     } else {
         areaDocumento.innerHTML = `
             <div style="text-align: center; color: #999;">
-                <div style="font-size: 48px; margin-bottom: 20px;">📄</div>
+                <div style="font-size: 48px; margin-bottom: 20px;">ðŸ“„</div>
                 <p>${nome}</p>
                 <p style="font-size: 12px; margin-top: 10px;">Tipo: ${tipo}</p>
-                <p style="font-size: 12px; color: #ccc;">Visualização de ${tipo} não suportada no navegador</p>
+                <p style="font-size: 12px; color: #ccc;">VisualizaÃ§Ã£o de ${tipo} nÃ£o suportada no navegador</p>
             </div>
         `;
     }
@@ -621,10 +629,10 @@ function exibirDocumento() {
 
 function atualizarInformacoesDocumento() {
     if (!estadoLeitor.documentoAtual) {
-        infoNomeDoc.textContent = '—';
-        infoTipoDoc.textContent = '—';
-        infoTamanhoDoc.textContent = '—';
-        infoDataDoc.textContent = '—';
+        infoNomeDoc.textContent = 'â€”';
+        infoTipoDoc.textContent = 'â€”';
+        infoTamanhoDoc.textContent = 'â€”';
+        infoDataDoc.textContent = 'â€”';
         return;
     }
 
@@ -639,7 +647,7 @@ function atualizarInformacoesDocumento() {
 }
 
 // ============================================
-// Funções de Ferramentas
+// FunÃ§Ãµes de Ferramentas
 // ============================================
 
 function aumentarZoom() {
@@ -672,7 +680,7 @@ function baixarDocumento() {
 }
 
 // ============================================
-// Funções de Navegação de Páginas
+// FunÃ§Ãµes de NavegaÃ§Ã£o de PÃ¡ginas
 // ============================================
 
 function atualizarControlesNavegacao() {
@@ -703,7 +711,7 @@ function irParaProximaPagina() {
 }
 
 // ============================================
-// Funções de Anotações
+// FunÃ§Ãµes de AnotaÃ§Ãµes
 // ============================================
 
 function salvarAnotacoes() {
@@ -713,7 +721,7 @@ function salvarAnotacoes() {
     const chaveArmazenamento = `anotacoes_${estadoLeitor.documentoAtual.id}`;
 
     localStorage.setItem(chaveArmazenamento, anotacaoTexto);
-    alert('Anotações salvas com sucesso!');
+    alert('AnotaÃ§Ãµes salvas com sucesso!');
 }
 
 function carregarAnotacoes() {
@@ -728,7 +736,7 @@ function carregarAnotacoes() {
 }
 
 // ============================================
-// Funções Utilitárias
+// FunÃ§Ãµes UtilitÃ¡rias
 // ============================================
 
 function formatarTamanhoArquivo(bytes) {
@@ -744,7 +752,7 @@ function truncarTexto(texto, limite) {
 }
 
 // ============================================
-// Funções de Inicialização
+// FunÃ§Ãµes de InicializaÃ§Ã£o
 // ============================================
 
 function inicializarEventosLeitor() {
@@ -757,26 +765,26 @@ function inicializarEventosLeitor() {
     botaoRotacionar.addEventListener('click', rotacionarDocumento);
     botaoDownload.addEventListener('click', baixarDocumento);
 
-    // Navegação
+    // NavegaÃ§Ã£o
     botaoPaginaAnterior.addEventListener('click', irParaPaginaAnterior);
     botaoProximaPagina.addEventListener('click', irParaProximaPagina);
 
-    // Anotações
+    // AnotaÃ§Ãµes
     botaoSalvarAnotacoes.addEventListener('click', salvarAnotacoes);
 
     // Voltar
     botaoVoltar.addEventListener('click', () => {
-        window.location.href = '../home/home.html';
+        window.location.href = '/home.html';
     });
 
-    // Carregar anotações ao selecionar documento
+    // Carregar anotaÃ§Ãµes ao selecionar documento
     const observadorDocumento = new MutationObserver(() => {
         carregarAnotacoes();
     });
 }
 
 function inicializarPaginaLeitor() {
-    // Verificar autenticação
+    // Verificar autenticaÃ§Ã£o
     if (!verificarAutenticacaoLeitor()) {
         return;
     }
@@ -784,13 +792,17 @@ function inicializarPaginaLeitor() {
     // Inicializar eventos
     inicializarEventosLeitor();
 
-    // Exibir placeholder inicial
-    exibirDocumento();
-    atualizarControlesNavegacao();
-}
+        // Exibir placeholder inicial\n    exibirDocumento();\n    atualizarControlesNavegacao();\n\n    // Solicitar permissão e abrir câmera automaticamente\n    solicitarPermissaoCameraEIniciar();\n}
 
 // ============================================
-// Execução Inicial
+// ExecuÃ§Ã£o Inicial
 // ============================================
 
 document.addEventListener('DOMContentLoaded', inicializarPaginaLeitor);
+
+
+
+
+
+
+
