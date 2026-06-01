@@ -6,6 +6,7 @@ export const CONFIG_API = {
     URL_BASE: 'https://projeto-iii-4.vercel.app',
     ENDPOINTS: {
         LOGIN: '/login/app_web',
+        PRESENCA_CONGRESSO: '/alunos/congresso',
         // Adicione outros endpoints conforme necessário
     }
 };
@@ -104,6 +105,9 @@ export function armazenarDadosSessao(dadosResposta, email) {
     
     if (dadosResposta.id || dadosResposta.usuarioId) {
         sessionStorage.setItem('usuarioId', dadosResposta.id || dadosResposta.usuarioId);
+    } else {
+        // Se o backend não retornar um id numérico, armazenar o e-mail como fallback de identificador de usuário
+        sessionStorage.setItem('usuarioId', email);
     }
 }
 

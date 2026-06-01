@@ -2,7 +2,8 @@
 // Importações
 // ============================================
 
-import { verificarAutenticacao } from '../../utils/api.js';
+import { verificarAutenticacao, fazerRequisicaoPost, CONFIG_API } from '../../utils/api.js';
+import jsQR from 'jsqr';
 
 // ============================================
 // Elementos do DOM
@@ -14,6 +15,10 @@ const listaDocumentos = document.getElementById('lista-documentos');
 const areaDocumento = document.getElementById('area-documento');
 const botaoVoltar = document.getElementById('botao-voltar');
 const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
+const botaoIniciarScanner = document.getElementById('botao-iniciar-scanner');
+const botaoPararScanner = document.getElementById('botao-parar-scanner');
+const videoScanner = document.getElementById('video-scanner');
+const mensagemScanner = document.getElementById('mensagem-scanner');
 
 // Botões de ferramentas
 const botaoZoomAumentar = document.getElementById('botao-zoom-aumentar');
@@ -49,6 +54,125 @@ const estadoLeitor = {
     nivelZoom: 100,
     rotacao: 0,
 };
+
+let streamScanner = null;
+let scannerAtivo = false;
+const canvasQRCode = document.createElement('canvas');
+const contextoQRCode = canvasQRCode.getContext('2d');
+
+function mostrarMensagemScanner(texto, tipo = 'info') {
+    if (!mensagemScanner) return;
+    mensagemScanner.textContent = texto;
+    mensagemScanner.className = tipo === 'erro' ? 'mensagem-scanner erro' : tipo === 'sucesso' ? 'mensagem-scanner sucesso' : 'mensagem-scanner';
+}
+
+function extrairIdChamadaDoQRCode(textoQRCode) {
+    if (!textoQRCode) return null;
+
+    try {
+        const dados = JSON.parse(textoQRCode);
+        return dados.id_chamada || dados.idChamado || dados.id_chamada || null;
+    } catch (erro) {
+        const valor = textoQRCode.trim();
+        const match = valor.match(/\d+/);
+        return match ? match[0] : valor;
+    }
+}
+
+async function enviarPresencaCongresso(idChamada) {
+    const idAluno = sessionStorage.getItem('usuarioId') || sessionStorage.getItem('usuarioLogado');
+
+    if (!idAluno) {
+        mostrarMensagemScanner('ID do aluno não encontrado. Faça login novamente.', 'erro');
+        return;
+    }
+
+    const dadosPresenca = {
+        hora_post: new Date().toISOString(),
+        id_chamada: idChamada,
+        id_aluno: idAluno,
+        tipo_presenca: 1,
+    };
+
+    try {
+        await fazerRequisicaoPost(CONFIG_API.ENDPOINTS.PRESENCA_CONGRESSO, dadosPresenca);
+        mostrarMensagemScanner('Presença registrada com sucesso!', 'sucesso');
+    } catch (erro) {
+        mostrarMensagemScanner(erro.mensagem || 'Erro ao enviar presença.', 'erro');
+        console.error('Erro ao enviar presença:', erro);
+    }
+}
+
+function pararScannerQRCode() {
+    scannerAtivo = false;
+    botaoIniciarScanner.disabled = false;
+    botaoPararScanner.disabled = true;
+
+    if (streamScanner) {
+        streamScanner.getTracks().forEach(track => track.stop());
+        streamScanner = null;
+    }
+
+    if (videoScanner) {
+        videoScanner.pause();
+        videoScanner.srcObject = null;
+    }
+
+    mostrarMensagemScanner('Scanner parado.', 'info');
+}
+
+async function processarFrameQRCode() {
+    if (!scannerAtivo) {
+        return;
+    }
+
+    if (videoScanner.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA) {
+        canvasQRCode.width = videoScanner.videoWidth;
+        canvasQRCode.height = videoScanner.videoHeight;
+        contextoQRCode.drawImage(videoScanner, 0, 0, canvasQRCode.width, canvasQRCode.height);
+
+        const imageData = contextoQRCode.getImageData(0, 0, canvasQRCode.width, canvasQRCode.height);
+        const codigoQR = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (codigoQR?.data) {
+            const idChamada = extrairIdChamadaDoQRCode(codigoQR.data);
+
+            if (idChamada) {
+                mostrarMensagemScanner(`QR detectado: ${idChamada}`, 'sucesso');
+                pararScannerQRCode();
+                await enviarPresencaCongresso(idChamada);
+                return;
+            }
+
+            mostrarMensagemScanner('QR detectado, mas não foi possível extrair o id_chamada.', 'erro');
+        }
+    }
+
+    requestAnimationFrame(processarFrameQRCode);
+}
+
+async function iniciarScannerQRCode() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        mostrarMensagemScanner('Navegador não suporta câmera.', 'erro');
+        return;
+    }
+
+    try {
+        streamScanner = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        videoScanner.srcObject = streamScanner;
+        await videoScanner.play();
+
+        scannerAtivo = true;
+        botaoIniciarScanner.disabled = true;
+        botaoPararScanner.disabled = false;
+
+        mostrarMensagemScanner('Câmera ativada. Aponte para o QR code.', 'info');
+        requestAnimationFrame(processarFrameQRCode);
+    } catch (erro) {
+        mostrarMensagemScanner('Não foi possível acessar a câmera. Verifique permissões.', 'erro');
+        console.error('Erro ao iniciar scanner:', erro);
+    }
+}
 
 // ============================================
 // Funções de Autenticação

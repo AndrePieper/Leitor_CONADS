@@ -140,6 +140,54 @@ body {
     text-align: center;
 }
 
+.secao-scanner {
+    margin-top: 20px;
+}
+
+.scanner-acoes {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.scanner-area {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f8f9fb;
+    display: grid;
+    gap: 10px;
+    padding: 10px;
+}
+
+#video-scanner {
+    width: 100%;
+    min-height: 220px;
+    background: #000;
+    border-radius: 6px;
+}
+
+.mensagem-scanner {
+    font-size: 12px;
+    color: #333;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+}
+
+.mensagem-scanner.sucesso {
+    color: #1f7a26;
+    border-color: #c6f6d5;
+    background: #edf7ee;
+}
+
+.mensagem-scanner.erro {
+    color: #c53030;
+    border-color: #fed7d7;
+    background: #fff5f5;
+}
+
 /* Lista de Documentos */
 
 .lista-documentos {
