@@ -31,11 +31,6 @@ function validarCamposLogin() {
         return false;
     }
 
-    if (senha.length < 6) {
-        mostrarErro('Senha deve ter pelo menos 6 caracteres!');
-        return false;
-    }
-
     return true;
 }
 
