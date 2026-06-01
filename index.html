@@ -59,8 +59,18 @@
     </div>
 
     <script>
-        // Página inicial: links para as principais páginas
-        // Não redireciona automaticamente para permitir acesso direto ao root
+        // Redireciona automaticamente para a página de login após a tela de carregamento
+        const linkLogin = document.createElement('a');
+        linkLogin.href = '/login.html';
+        linkLogin.textContent = 'Ir para Login';
+        linkLogin.style.display = 'inline-block';
+        linkLogin.style.marginTop = '12px';
+        linkLogin.style.color = 'white';
+        document.querySelector('.container-carregamento').appendChild(linkLogin);
+
+        setTimeout(() => {
+            window.location.href = '/login.html';
+        }, 1000);
     </script>
 </body>
 </html>
