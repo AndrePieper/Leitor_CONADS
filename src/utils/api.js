@@ -52,7 +52,7 @@ export async function fazerRequisicaoPost(endpoint, dados) {
 
 export async function fazerRequisicaoGet(endpoint) {
     const urlCompleta = CONFIG_API.URL_BASE + endpoint;
-    const tokenAutenticacao = sessionStorage.getItem('tokenAutenticacao');
+    const tokenAutenticacao = sessionStorage.getItem('token');
 
     try {
         const opcoes = {
@@ -98,11 +98,20 @@ export async function fazerRequisicaoGet(endpoint) {
 export function armazenarDadosSessao(dadosResposta, email) {
     sessionStorage.setItem('usuarioLogado', email);
     sessionStorage.setItem('dataLogin', new Date().toISOString());
-    
-    if (dadosResposta.token) {
-        sessionStorage.setItem('tokenAutenticacao', dadosResposta.token);
+
+    const token =
+        dadosResposta?.token ||
+        dadosResposta?.accessToken ||
+        dadosResposta?.authToken ||
+        dadosResposta?.token_autenticacao ||
+        dadosResposta?.tokenAutenticacao ||
+        dadosResposta?.data?.token ||
+        dadosResposta?.data?.accessToken;
+
+    if (token) {
+        sessionStorage.setItem('token', token);
     }
-    
+
     if (dadosResposta.id || dadosResposta.usuarioId) {
         sessionStorage.setItem('usuarioId', dadosResposta.id || dadosResposta.usuarioId);
     } else {
@@ -114,12 +123,12 @@ export function armazenarDadosSessao(dadosResposta, email) {
 export function limparSessao() {
     sessionStorage.removeItem('usuarioLogado');
     sessionStorage.removeItem('dataLogin');
-    sessionStorage.removeItem('tokenAutenticacao');
+    sessionStorage.removeItem('token');
     sessionStorage.removeItem('usuarioId');
 }
 
 export function obterTokenAutenticacao() {
-    return sessionStorage.getItem('tokenAutenticacao');
+    return sessionStorage.getItem('token');
 }
 
 export function verificarAutenticacao() {
