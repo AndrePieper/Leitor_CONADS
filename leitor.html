@@ -8,125 +8,53 @@
 </head>
 <body>
     <div class="interface-leitor">
-        <header class="barra-superior-leitor">
-            <div class="conteudo-barra">
-                <button id="botao-voltar" class="botao-voltar" title="Voltar para tela anterior">
-                    ← Voltar
-                </button>
-                <h1>Leitor de Documentos CONADSI</h1>
-                <div class="info-usuario-leitor">
-                    <span id="usuario-leitor-info"></span>
+        <main class="container-leitor">
+            <div class="cartao-leitor">
+                <div class="camera-header">
+                    <div class="titulo-leitor">Leitor de QR Code</div>
                 </div>
+
+                <div class="camera-card">
+                    <div class="camera-frame">
+                        <video id="video-scanner" autoplay playsinline muted></video>
+                    </div>
+                    <div id="mensagem-scanner" class="mensagem-scanner">Aguardando QR code...</div>
+                </div>
+
+                <button id="botao-voltar" class="botao-primario">Voltar</button>
             </div>
-        </header>
-
-        <main class="area-principal-leitor">
-            <aside class="painel-lateral-leitor">
-                <div class="secao-upload">
-                    <h3>Carregar Documento</h3>
-                    <input 
-                        type="file" 
-                        id="entrada-arquivo" 
-                        class="entrada-arquivo"
-                        accept=".pdf,.docx,.txt,.jpg,.png"
-                    />
-                    <label for="entrada-arquivo" class="botao-upload">
-                        📁 Selecionar Arquivo
-                    </label>
-                    <p class="ajuda-upload">
-                        Formatos aceitos: PDF, DOCX, TXT, JPG, PNG
-                    </p>
-                </div>
-
-                <div class="secao-documentos">
-                    <h3>Documentos Carregados</h3>
-                    <div id="lista-documentos" class="lista-documentos">
-                        <p class="vazio">Nenhum documento carregado</p>
-                    </div>
-                </div>
-
-                <div class="secao-ferramentas">
-                    <h3>Ferramentas</h3>
-                    <button id="botao-zoom-aumentar" class="botao-ferramenta">
-                        🔍+ Aumentar
-                    </button>
-                    <button id="botao-zoom-diminuir" class="botao-ferramenta">
-                        🔍- Diminuir
-                    </button>
-                    <button id="botao-rotacionar" class="botao-ferramenta">
-                        🔄 Girar
-                    </button>
-                    <button id="botao-download" class="botao-ferramenta" disabled>
-                        ⬇️ Download
-                    </button>
-                </div>
-            </aside>
-
-            <section class="area-visualizacao-leitor">
-                <div id="area-documento" class="area-documento">
-                    <div class="placeholder-documento">
-                        <div class="icone-placeholder">📄</div>
-                        <p>Selecione um documento para visualizar</p>
-                    </div>
-                </div>
-
-                <div class="controles-navegacao">
-                    <button 
-                        id="botao-pagina-anterior" 
-                        class="botao-pagina"
-                        disabled
-                    >
-                        ◀ Anterior
-                    </button>
-                    <div class="indicador-pagina">
-                        <span id="pagina-atual">0</span>
-                        /
-                        <span id="total-paginas">0</span>
-                    </div>
-                    <button 
-                        id="botao-proxima-pagina" 
-                        class="botao-pagina"
-                        disabled
-                    >
-                        Próxima ▶
-                    </button>
-                </div>
-            </section>
         </main>
 
-        <aside class="painel-direito-leitor">
-            <div class="secao-informacoes-documento">
-                <h3>Informações do Documento</h3>
-                <div class="info-item">
-                    <span class="label-info">Nome:</span>
-                    <span id="info-nome-doc" class="valor-info">—</span>
-                </div>
-                <div class="info-item">
-                    <span class="label-info">Tipo:</span>
-                    <span id="info-tipo-doc" class="valor-info">—</span>
-                </div>
-                <div class="info-item">
-                    <span class="label-info">Tamanho:</span>
-                    <span id="info-tamanho-doc" class="valor-info">—</span>
-                </div>
-                <div class="info-item">
-                    <span class="label-info">Data Carregamento:</span>
-                    <span id="info-data-doc" class="valor-info">—</span>
-                </div>
+        <div class="oculto-ids" aria-hidden="true">
+            <div class="scanner-controls">
+                <button id="botao-iniciar-scanner" class="botao-ferramenta">🎥 Iniciar câmera</button>
+                <button id="botao-parar-scanner" class="botao-ferramenta" disabled>⏹ Parar câmera</button>
             </div>
 
-            <div class="secao-anotacoes">
-                <h3>Anotações</h3>
-                <textarea 
-                    id="area-anotacoes" 
-                    class="campo-anotacoes"
-                    placeholder="Adicione suas anotações aqui..."
-                ></textarea>
-                <button id="botao-salvar-anotacoes" class="botao-acao">
-                    💾 Salvar Anotações
-                </button>
-            </div>
-        </aside>
+            <input 
+                type="file" 
+                id="entrada-arquivo" 
+                class="entrada-arquivo"
+                accept=".pdf,.docx,.txt,.jpg,.png"
+            />
+            <button id="botao-zoom-aumentar" class="botao-ferramenta"></button>
+            <button id="botao-zoom-diminuir" class="botao-ferramenta"></button>
+            <button id="botao-rotacionar" class="botao-ferramenta"></button>
+            <button id="botao-download" class="botao-ferramenta" disabled></button>
+            <button id="botao-pagina-anterior" class="botao-pagina"></button>
+            <button id="botao-proxima-pagina" class="botao-pagina"></button>
+            <span id="pagina-atual"></span>
+            <span id="total-paginas"></span>
+            <div id="area-documento"></div>
+            <span id="info-nome-doc"></span>
+            <span id="info-tipo-doc"></span>
+            <span id="info-tamanho-doc"></span>
+            <span id="info-data-doc"></span>
+            <textarea id="area-anotacoes"></textarea>
+            <button id="botao-salvar-anotacoes"></button>
+            <span id="usuario-leitor-info"></span>
+            <div id="lista-documentos"></div>
+        </div>
     </div>
 
     <script type="module" src="src/page/leitor/leitor.js"></script>
