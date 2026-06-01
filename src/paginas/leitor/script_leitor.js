@@ -61,7 +61,7 @@ function verificarAutenticacaoLeitor() {
 }
 
 function redirecionarParaLogin() {
-    window.location.href = '../login/pagina_login.html';
+    window.location.href = '/login.html';
 }
 
 // ============================================

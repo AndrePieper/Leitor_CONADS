@@ -55,11 +55,11 @@ function configurarModoEscuro() {
 // ============================================
 
 function redirecionarParaLogin() {
-    window.location.href = '../login/login.html';
+    window.location.href = '/login.html';
 }
 
 function redirecionarParaLeitor() {
-    window.location.href = '../leitor/leitor.html';
+    window.location.href = '/leitor.html';
 }
 
 function realizarLogout() {

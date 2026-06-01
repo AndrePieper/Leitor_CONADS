@@ -60,11 +60,11 @@ function configurarModoEscuro() {
 // ============================================
 
 function redirecionarParaLogin() {
-    window.location.href = '../login/pagina_login.html';
+    window.location.href = '/login.html';
 }
 
 function redirecionarParaLeitor() {
-    window.location.href = '../leitor/pagina_leitor.html';
+    window.location.href = '/leitor.html';
 }
 
 function realizarLogout() {
