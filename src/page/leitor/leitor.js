@@ -22,6 +22,7 @@ const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
 let streamScanner = null;
 let scannerAtivo = false;
 let animationFrameId = null;
+let scanTimeoutId = null;
 const canvasQRCode = document.createElement('canvas');
 const contextoQRCode = canvasQRCode.getContext('2d');
 
@@ -48,8 +49,7 @@ async function enviarPresencaCongresso(idChamada) {
     const idAluno = sessionStorage.getItem('usuarioId') || sessionStorage.getItem('usuarioLogado');
 
     if (!idAluno) {
-        mostrarMensagemScanner('ID do aluno não encontrado. Faça login novamente.', 'erro');
-        return;
+        return { ok: false, status: null, mensagem: 'ID do aluno não encontrado. Faça login novamente.' };
     }
 
     const dadosPresenca = {
@@ -69,14 +69,13 @@ async function enviarPresencaCongresso(idChamada) {
         const conteudo = await resposta.json().catch(() => null);
 
         if (!resposta.ok) {
-            const mensagemErro = conteudo?.mensagem || conteudo?.erro || `Status ${resposta.status}`;
-            throw new Error(mensagemErro);
+            return { ok: false, status: resposta.status, mensagem: conteudo?.mensagem || conteudo?.erro || `Status ${resposta.status}` };
         }
 
-        mostrarMensagemScanner('Presença registrada com sucesso!', 'sucesso');
+        return { ok: true, status: resposta.status, dados: conteudo };
     } catch (erro) {
         console.error('Erro ao enviar presença:', erro);
-        mostrarMensagemScanner(erro.message || 'Erro ao enviar presença.', 'erro');
+        return { ok: false, status: null, mensagem: erro.message || 'Erro ao enviar presença.' };
     }
 }
 
@@ -86,6 +85,11 @@ function pararScannerQRCode() {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
+    }
+
+    if (scanTimeoutId) {
+        clearTimeout(scanTimeoutId);
+        scanTimeoutId = null;
     }
 
     if (streamScanner) {
@@ -100,12 +104,11 @@ function pararScannerQRCode() {
 }
 
 async function processarFrameQRCode() {
-    if (!scannerAtivo) {
-        return;
-    }
+    if (!scannerAtivo) return;
 
     if (!videoScanner || videoScanner.readyState !== HTMLMediaElement.HAVE_ENOUGH_DATA) {
-        animationFrameId = requestAnimationFrame(processarFrameQRCode);
+        // agendar nova tentativa em 5s
+        scanTimeoutId = setTimeout(processarFrameQRCode, 5000);
         return;
     }
 
@@ -116,20 +119,35 @@ async function processarFrameQRCode() {
     const imageData = contextoQRCode.getImageData(0, 0, canvasQRCode.width, canvasQRCode.height);
     const codigoQR = jsQR(imageData.data, imageData.width, imageData.height);
 
-    if (codigoQR?.data) {
-        const idChamada = extrairIdChamadaDoQRCode(codigoQR.data);
-
-        if (idChamada) {
-            mostrarMensagemScanner(`QR detectado: ${idChamada}`, 'sucesso');
-            pararScannerQRCode();
-            await enviarPresencaCongresso(idChamada);
-            return;
-        }
-
-        mostrarMensagemScanner('QR detectado, mas id_chamada não foi encontrado.', 'erro');
+    if (!codigoQR?.data) {
+        // nenhum QR detectado, tentar novamente em 5s
+        scanTimeoutId = setTimeout(processarFrameQRCode, 5000);
+        return;
     }
 
-    animationFrameId = requestAnimationFrame(processarFrameQRCode);
+    const idChamada = extrairIdChamadaDoQRCode(codigoQR.data);
+    if (!idChamada) {
+        mostrarMensagemScanner('QR detectado, mas id_chamada não foi encontrado.', 'erro');
+        scanTimeoutId = setTimeout(processarFrameQRCode, 5000);
+        return;
+    }
+
+    // pausar novas leituras enquanto envia
+    scannerAtivo = false;
+    mostrarMensagemScanner('Enviando presença...', 'info');
+
+    const resultado = await enviarPresencaCongresso(idChamada);
+
+    if (resultado.ok) {
+        mostrarMensagemScanner('Presença registrada com sucesso!', 'sucesso');
+        setTimeout(() => { window.location.href = '/home.html'; }, 1500);
+        return;
+    }
+
+    // erro no envio: mostrar mensagem e retomar tentativas
+    mostrarMensagemScanner(resultado.mensagem || 'Erro ao enviar presença.', 'erro');
+    scannerAtivo = true;
+    scanTimeoutId = setTimeout(processarFrameQRCode, 5000);
 }
 
 async function iniciarScannerQRCode() {
