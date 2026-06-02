@@ -8,6 +8,10 @@ const listaDocumentos = document.getElementById('lista-documentos');
 const areaDocumento = document.getElementById('area-documento');
 const botaoVoltar = document.getElementById('botao-voltar');
 const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
+const videoScanner = document.getElementById('video-scanner');
+const mensagemScanner = document.getElementById('mensagem-scanner');
+
+let cameraStream = null;
 
 // Botões de ferramentas
 const botaoZoomAumentar = document.getElementById('botao-zoom-aumentar');
@@ -62,6 +66,39 @@ function verificarAutenticacaoLeitor() {
 
 function redirecionarParaLogin() {
     window.location.href = '/login.html';
+}
+
+async function iniciarCameraScanner() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        mensagemScanner.textContent = 'Seu navegador não suporta acesso à câmera.';
+        return;
+    }
+
+    try {
+        mensagemScanner.textContent = 'Solicitando permissão para usar a câmera...';
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+            audio: false,
+        });
+
+        videoScanner.srcObject = cameraStream;
+        await videoScanner.play();
+        mensagemScanner.textContent = 'Câmera ativa. Aproxime o QR code.';
+    } catch (error) {
+        console.error('Erro ao iniciar câmera:', error);
+        mensagemScanner.textContent = 'Permissão negada ou câmera indisponível.';
+    }
+}
+
+function pararCameraScanner() {
+    if (!cameraStream) return;
+
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+    if (videoScanner) {
+        videoScanner.srcObject = null;
+    }
+    mensagemScanner.textContent = 'Câmera parada.';
 }
 
 // ============================================
@@ -336,6 +373,7 @@ function inicializarEventosLeitor() {
 
     // Voltar
     botaoVoltar.addEventListener('click', () => {
+        pararCameraScanner();
         window.location.href = '../home/pagina_home.html';
     });
 
@@ -357,6 +395,9 @@ function inicializarPaginaLeitor() {
     // Exibir placeholder inicial
     exibirDocumento();
     atualizarControlesNavegacao();
+
+    // Solicitar permissão de câmera e abrir câmera automaticamente
+    iniciarCameraScanner();
 }
 
 // ============================================
