@@ -139,7 +139,7 @@ async function iniciarScannerQRCode() {
     }
 
     try {
-        mostrarMensagemScanner('Abrindo câmera... aponte para o QR code.', 'info');
+        // mensagem de abertura removida conforme solicitado
         streamScanner = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
         videoScanner.srcObject = streamScanner;
         await videoScanner.play();
