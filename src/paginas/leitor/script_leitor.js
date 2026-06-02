@@ -10,6 +10,7 @@ const botaoVoltar = document.getElementById('botao-voltar');
 const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
 const videoScanner = document.getElementById('video-scanner');
 const mensagemScanner = document.getElementById('mensagem-scanner');
+const botaoAbrirCamera = document.getElementById('botao-abrir-camera');
 
 let cameraStream = null;
 
@@ -74,6 +75,11 @@ async function iniciarCameraScanner() {
         return;
     }
 
+    if (cameraStream) {
+        mensagemScanner.textContent = 'A câmera já está ativa.';
+        return;
+    }
+
     try {
         mensagemScanner.textContent = 'Solicitando permissão para usar a câmera...';
         cameraStream = await navigator.mediaDevices.getUserMedia({
@@ -82,11 +88,11 @@ async function iniciarCameraScanner() {
         });
 
         videoScanner.srcObject = cameraStream;
-        await videoScanner.play();
+        await videoScanner.play().catch(() => {});
         mensagemScanner.textContent = 'Câmera ativa. Aproxime o QR code.';
     } catch (error) {
         console.error('Erro ao iniciar câmera:', error);
-        mensagemScanner.textContent = 'Permissão negada ou câmera indisponível.';
+        mensagemScanner.textContent = 'Permissão negada ou câmera indisponível. Toque em Abrir câmera novamente e confirme o acesso.';
     }
 }
 
@@ -99,6 +105,11 @@ function pararCameraScanner() {
         videoScanner.srcObject = null;
     }
     mensagemScanner.textContent = 'Câmera parada.';
+}
+
+function voltarParaHome() {
+    pararCameraScanner();
+    window.location.href = '../home/pagina_home.html';
 }
 
 // ============================================
@@ -372,10 +383,12 @@ function inicializarEventosLeitor() {
     botaoSalvarAnotacoes.addEventListener('click', salvarAnotacoes);
 
     // Voltar
-    botaoVoltar.addEventListener('click', () => {
-        pararCameraScanner();
-        window.location.href = '../home/pagina_home.html';
-    });
+    botaoVoltar.addEventListener('click', voltarParaHome);
+
+    // Abrir câmera manualmente, se necessário
+    if (botaoAbrirCamera) {
+        botaoAbrirCamera.addEventListener('click', iniciarCameraScanner);
+    }
 
     // Carregar anotações ao selecionar documento
     const observadorDocumento = new MutationObserver(() => {
