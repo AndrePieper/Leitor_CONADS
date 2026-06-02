@@ -76,6 +76,7 @@ function realizarRedirecionamentoParaHome(nomeUsuario) {
 
 function armazenarDadosSessao(nomeUsuario) {
     sessionStorage.setItem('usuarioLogado', nomeUsuario);
+    sessionStorage.setItem('usuarioId', nomeUsuario);
     sessionStorage.setItem('dataLogin', new Date().toISOString());
 }
 
