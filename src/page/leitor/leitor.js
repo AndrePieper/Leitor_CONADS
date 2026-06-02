@@ -1,5 +1,5 @@
 ﻿// ============================================
-// ImportaÃ§Ãµes
+// Importações
 // ============================================
 
 import { verificarAutenticacao, fazerRequisicaoPost, CONFIG_API } from '../../utils/api.js';
@@ -9,54 +9,20 @@ import jsQR from 'jsqr';
 // Elementos do DOM
 // ============================================
 
-const entradaArquivo = document.getElementById('entrada-arquivo');
-const botaoUpload = document.querySelector('.botao-upload');
-const listaDocumentos = document.getElementById('lista-documentos');
-const areaDocumento = document.getElementById('area-documento');
 const botaoVoltar = document.getElementById('botao-voltar');
-const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
 const botaoIniciarScanner = document.getElementById('botao-iniciar-scanner');
 const botaoPararScanner = document.getElementById('botao-parar-scanner');
 const videoScanner = document.getElementById('video-scanner');
 const mensagemScanner = document.getElementById('mensagem-scanner');
-
-// BotÃµes de ferramentas
-const botaoZoomAumentar = document.getElementById('botao-zoom-aumentar');
-const botaoZoomDiminuir = document.getElementById('botao-zoom-diminuir');
-const botaoRotacionar = document.getElementById('botao-rotacionar');
-const botaoDownload = document.getElementById('botao-download');
-
-// Controles de navegaÃ§Ã£o
-const botaoPaginaAnterior = document.getElementById('botao-pagina-anterior');
-const botaoProximaPagina = document.getElementById('botao-proxima-pagina');
-const paginaAtualElemento = document.getElementById('pagina-atual');
-const totalPaginasElemento = document.getElementById('total-paginas');
-
-// InformaÃ§Ãµes do documento
-const infoNomeDoc = document.getElementById('info-nome-doc');
-const infoTipoDoc = document.getElementById('info-tipo-doc');
-const infoTamanhoDoc = document.getElementById('info-tamanho-doc');
-const infoDataDoc = document.getElementById('info-data-doc');
-
-// AnotaÃ§Ãµes
-const areaAnotacoes = document.getElementById('area-anotacoes');
-const botaoSalvarAnotacoes = document.getElementById('botao-salvar-anotacoes');
+const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
 
 // ============================================
-// Estado da AplicaÃ§Ã£o
+// Estado do Scanner
 // ============================================
-
-const estadoLeitor = {
-    documentosCarregados: [],
-    documentoAtual: null,
-    paginaAtual: 0,
-    totalPaginas: 0,
-    nivelZoom: 100,
-    rotacao: 0,
-};
 
 let streamScanner = null;
 let scannerAtivo = false;
+let animationFrameId = null;
 const canvasQRCode = document.createElement('canvas');
 const contextoQRCode = canvasQRCode.getContext('2d');
 
@@ -71,11 +37,11 @@ function extrairIdChamadaDoQRCode(textoQRCode) {
 
     try {
         const dados = JSON.parse(textoQRCode);
-        return dados.id_chamada || dados.idChamado || dados.id_chamada || null;
-    } catch (erro) {
+        return dados.id_chamada ?? dados.idChamado ?? dados.id ?? null;
+    } catch {
         const valor = textoQRCode.trim();
         const match = valor.match(/\d+/);
-        return match ? match[0] : valor;
+        return match ? match[0] : valor || null;
     }
 }
 
@@ -83,7 +49,7 @@ async function enviarPresencaCongresso(idChamada) {
     const idAluno = sessionStorage.getItem('usuarioId') || sessionStorage.getItem('usuarioLogado');
 
     if (!idAluno) {
-        mostrarMensagemScanner('ID do aluno nÃ£o encontrado. FaÃ§a login novamente.', 'erro');
+        mostrarMensagemScanner('ID do aluno não encontrado. Faça login novamente.', 'erro');
         return;
     }
 
@@ -95,18 +61,33 @@ async function enviarPresencaCongresso(idChamada) {
     };
 
     try {
-        await fazerRequisicaoPost(CONFIG_API.ENDPOINTS.PRESENCA_CONGRESSO, dadosPresenca);
-        mostrarMensagemScanner('PresenÃ§a registrada com sucesso!', 'sucesso');
+        const resposta = await fetch('https://projeto-iii-4.vercel.app/alunos/congresso', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dadosPresenca),
+        });
+
+        const conteudo = await resposta.json().catch(() => null);
+
+        if (!resposta.ok) {
+            const mensagemErro = conteudo?.mensagem || conteudo?.erro || `Status ${resposta.status}`;
+            throw new Error(mensagemErro);
+        }
+
+        mostrarMensagemScanner('Presença registrada com sucesso!', 'sucesso');
     } catch (erro) {
-        mostrarMensagemScanner(erro.mensagem || 'Erro ao enviar presenÃ§a.', 'erro');
-        console.error('Erro ao enviar presenÃ§a:', erro);
+        console.error('Erro ao enviar presença:', erro);
+        mostrarMensagemScanner(erro.message || 'Erro ao enviar presença.', 'erro');
     }
 }
 
 function pararScannerQRCode() {
     scannerAtivo = false;
-    botaoIniciarScanner.disabled = false;
-    botaoPararScanner.disabled = true;
+
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
 
     if (streamScanner) {
         streamScanner.getTracks().forEach(track => track.stop());
@@ -117,8 +98,6 @@ function pararScannerQRCode() {
         videoScanner.pause();
         videoScanner.srcObject = null;
     }
-
-    mostrarMensagemScanner('Scanner parado.', 'info');
 }
 
 async function processarFrameQRCode() {
@@ -126,689 +105,90 @@ async function processarFrameQRCode() {
         return;
     }
 
-    if (videoScanner.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA) {
-        canvasQRCode.width = videoScanner.videoWidth;
-        canvasQRCode.height = videoScanner.videoHeight;
-        contextoQRCode.drawImage(videoScanner, 0, 0, canvasQRCode.width, canvasQRCode.height);
-
-        const imageData = contextoQRCode.getImageData(0, 0, canvasQRCode.width, canvasQRCode.height);
-        const codigoQR = jsQR(imageData.data, imageData.width, imageData.height);
-
-        if (codigoQR?.data) {
-            const idChamada = extrairIdChamadaDoQRCode(codigoQR.data);
-
-            if (idChamada) {
-                mostrarMensagemScanner(`QR detectado: ${idChamada}`, 'sucesso');
-                pararScannerQRCode();
-                await enviarPresencaCongresso(idChamada);
-                return;
-            }
-
-            mostrarMensagemScanner('QR detectado, mas nÃ£o foi possÃ­vel extrair o id_chamada.', 'erro');
-        }
+    if (!videoScanner || videoScanner.readyState !== HTMLMediaElement.HAVE_ENOUGH_DATA) {
+        animationFrameId = requestAnimationFrame(processarFrameQRCode);
+        return;
     }
 
-    requestAnimationFrame(processarFrameQRCode);
+    canvasQRCode.width = videoScanner.videoWidth;
+    canvasQRCode.height = videoScanner.videoHeight;
+    contextoQRCode.drawImage(videoScanner, 0, 0, canvasQRCode.width, canvasQRCode.height);
+
+    const imageData = contextoQRCode.getImageData(0, 0, canvasQRCode.width, canvasQRCode.height);
+    const codigoQR = jsQR(imageData.data, imageData.width, imageData.height);
+
+    if (codigoQR?.data) {
+        const idChamada = extrairIdChamadaDoQRCode(codigoQR.data);
+
+        if (idChamada) {
+            mostrarMensagemScanner(`QR detectado: ${idChamada}`, 'sucesso');
+            pararScannerQRCode();
+            await enviarPresencaCongresso(idChamada);
+            return;
+        }
+
+        mostrarMensagemScanner('QR detectado, mas id_chamada não foi encontrado.', 'erro');
+    }
+
+    animationFrameId = requestAnimationFrame(processarFrameQRCode);
 }
 
 async function iniciarScannerQRCode() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        mostrarMensagemScanner('Navegador nÃ£o suporta cÃ¢mera.', 'erro');
+    if (!navigator.mediaDevices?.getUserMedia) {
+        mostrarMensagemScanner('Seu navegador não suporta acesso à câmera.', 'erro');
         return;
     }
 
     try {
-        streamScanner = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        mostrarMensagemScanner('Abrindo câmera... aponte para o QR code.', 'info');
+        streamScanner = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
         videoScanner.srcObject = streamScanner;
         await videoScanner.play();
 
         scannerAtivo = true;
-        botaoIniciarScanner.disabled = true;
-        botaoPararScanner.disabled = false;
+        botaoIniciarScanner?.setAttribute('disabled', 'true');
+        botaoPararScanner?.removeAttribute('disabled');
 
-        mostrarMensagemScanner('CÃ¢mera ativada. Aponte para o QR code.', 'info');
-        requestAnimationFrame(processarFrameQRCode);
+        processarFrameQRCode();
     } catch (erro) {
-        mostrarMensagemScanner('NÃ£o foi possÃ­vel acessar a cÃ¢mera. Verifique permissÃµes.', 'erro');
         console.error('Erro ao iniciar scanner:', erro);
+        mostrarMensagemScanner('Permissão negada ou câmera indisponível. Use o botão para tentar novamente.', 'erro');
     }
 }
 
-async function solicitarPermissaoCameraEIniciar() {
-    mostrarMensagemScanner('Solicitando permissÃ£o para abrir a cÃ¢mera...', 'info');
-    await iniciarScannerQRCode();
-}
-
-// ============================================
-// FunÃ§Ãµes de AutenticaÃ§Ã£o
-// ============================================
-
 function verificarAutenticacaoLeitor() {
-    if (!verificarAutenticacao()) {
-        redirecionarParaLogin();
+    const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+
+    if (!usuarioLogado) {
+        window.location.href = '/login.html';
         return false;
     }
 
-    const usuarioLogado = sessionStorage.getItem('usuarioLogado');
-    usuarioLeitorInfo.textContent = usuarioLogado;
+    if (usuarioLeitorInfo) {
+        usuarioLeitorInfo.textContent = usuarioLogado;
+    }
+
     return true;
 }
 
-function redirecionarParaLogin() {
-    window.location.href = '/login.html';
+function voltarParaHome() {
+    pararScannerQRCode();
+    window.location.href = '/home.html';
 }
-
-// ============================================
-// FunÃ§Ãµes de Upload de Arquivo
-// ============================================
-
-function procesarArquivoSelecionado(evento) {
-    const arquivo = evento.target.files[0];
-    
-    if (!arquivo) return;
-
-    // Validar tipo de arquivo
-    if (!validarTipoArquivo(arquivo)) {
-        alert('Tipo de arquivo nÃ£o suportado!');
-        return;
-    }
-
-    // Validar tamanho (mÃ¡ximo 10MB)
-    if (arquivo.size > 10 * 1024 * 1024) {
-        alert('Arquivo muito grande! MÃ¡ximo: 10MB');
-        return;
-    }
-
-    adicionarDocumentoCarregado(arquivo);
-}
-
-function validarTipoArquivo(arquivo) {
-    const tiposPermitidos = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/jpeg', 'image/png'];
-    return tiposPermitidos.includes(arquivo.type);
-}
-
-function adicionarDocumentoCarregado(arquivo) {
-    const documentoNovo = {
-        id: Date.now(),
-        nome: arquivo.name,
-        tipo: arquivo.type,
-        tamanho: arquivo.size,
-        data: new Date().toLocaleString('pt-BR'),
-        arquivo: arquivo,
-    };
-
-    estadoLeitor.documentosCarregados.push(documentoNovo);
-    atualizarListaDocumentos();
-
-    // Selecionar automaticamente o novo documento
-    selecionarDocumento(documentoNovo.id);
-}
-
-// ============================================
-// FunÃ§Ãµes de Gerenciamento de Documentos
-// ============================================
-
-function atualizarListaDocumentos() {
-    if (estadoLeitor.documentosCarregados.length === 0) {
-        listaDocumentos.innerHTML = '<p class="vazio">Nenhum documento carregado</p>';
-        return;
-    }
-
-    listaDocumentos.innerHTML = estadoLeitor.documentosCarregados
-        .map(doc => `
-            <div class="item-documento ${doc.id === estadoLeitor.documentoAtual?.id ? 'ativo' : ''}" data-id="${doc.id}">
-                <div class="nome-item-doc">${truncarTexto(doc.nome, 20)}</div>
-                <div class="tamanho-item-doc">${formatarTamanhoArquivo(doc.tamanho)}</div>
-            </div>
-        `)
-        .join('');
-
-    // Adicionar event listeners aos itens
-    document.querySelectorAll('.item-documento').forEach(item => {
-        item.addEventListener('click', (e) => {
-            const id = parseInt(e.currentTarget.dataset.id);
-            selecionarDocumento(id);
-        });
-    });
-}
-
-function selecionarDocumento(id) {
-    const documento = estadoLeitor.documentosCarregados.find(doc => doc.id === id);
-    
-    if (!documento) return;
-
-    estadoLeitor.documentoAtual = documento;
-    estadoLeitor.paginaAtual = 0;
-    estadoLeitor.totalPaginas = 1; // Simulado para este exemplo
-    estadoLeitor.nivelZoom = 100;
-    estadoLeitor.rotacao = 0;
-
-    atualizarListaDocumentos();
-    exibirDocumento();
-    atualizarInformacoesDocumento();
-    atualizarControlesNavegacao();
-}
-
-function exibirDocumento() {
-    if (!estadoLeitor.documentoAtual) {
-        areaDocumento.innerHTML = `
-            <div class="placeholder-documento">
-                <div class="icone-placeholder">ðŸ“„</div>
-                <p>Selecione um documento para visualizar</p>
-            </div>
-        `;
-        return;
-    }
-
-    const { nome, tipo, arquivo } = estadoLeitor.documentoAtual;
-
-    // Simular visualizaÃ§Ã£o do documento
-    if (tipo.includes('image')) {
-        const leitorArquivo = new FileReader();
-        leitorArquivo.onload = (e) => {
-            areaDocumento.innerHTML = `
-                <img src="${e.target.result}" style="max-width: 100%; max-height: 100%; object-fit: contain; transform: scale(${estadoLeitor.nivelZoom / 100}) rotate(${estadoLeitor.rotacao}deg);" />
-            `;
-        };
-        leitorArquivo.readAsDataURL(arquivo);
-    } else {
-        areaDocumento.innerHTML = `
-            <div style="text-align: center; color: #999;">
-                <div style="font-size: 48px; margin-bottom: 20px;">ðŸ“„</div>
-                <p>${nome}</p>
-                <p style="font-size: 12px; margin-top: 10px;">Tipo: ${tipo}</p>
-                <p style="font-size: 12px; color: #ccc;">VisualizaÃ§Ã£o de ${tipo} nÃ£o suportada no navegador</p>
-            </div>
-        `;
-    }
-}
-
-function atualizarInformacoesDocumento() {
-    if (!estadoLeitor.documentoAtual) {
-        infoNomeDoc.textContent = 'â€”';
-        infoTipoDoc.textContent = 'â€”';
-        infoTamanhoDoc.textContent = 'â€”';
-        infoDataDoc.textContent = 'â€”';
-        return;
-    }
-
-    const { nome, tipo, tamanho, data } = estadoLeitor.documentoAtual;
-
-    infoNomeDoc.textContent = nome;
-    infoTipoDoc.textContent = tipo || 'Desconhecido';
-    infoTamanhoDoc.textContent = formatarTamanhoArquivo(tamanho);
-    infoDataDoc.textContent = data;
-
-    botaoDownload.disabled = false;
-}
-
-// ============================================
-// FunÃ§Ãµes de Ferramentas
-// ============================================
-
-function aumentarZoom() {
-    if (estadoLeitor.nivelZoom < 300) {
-        estadoLeitor.nivelZoom += 25;
-        exibirDocumento();
-    }
-}
-
-function diminuirZoom() {
-    if (estadoLeitor.nivelZoom > 50) {
-        estadoLeitor.nivelZoom -= 25;
-        exibirDocumento();
-    }
-}
-
-function rotacionarDocumento() {
-    estadoLeitor.rotacao = (estadoLeitor.rotacao + 90) % 360;
-    exibirDocumento();
-}
-
-function baixarDocumento() {
-    if (!estadoLeitor.documentoAtual) return;
-
-    const { arquivo } = estadoLeitor.documentoAtual;
-    const linkDownload = document.createElement('a');
-    linkDownload.href = URL.createObjectURL(arquivo);
-    linkDownload.download = arquivo.name;
-    linkDownload.click();
-}
-
-// ============================================
-// FunÃ§Ãµes de NavegaÃ§Ã£o de PÃ¡ginas
-// ============================================
-
-function atualizarControlesNavegacao() {
-    const temAnterior = estadoLeitor.paginaAtual > 0;
-    const temProxima = estadoLeitor.paginaAtual < estadoLeitor.totalPaginas - 1;
-
-    botaoPaginaAnterior.disabled = !temAnterior;
-    botaoProximaPagina.disabled = !temProxima;
-
-    paginaAtualElemento.textContent = estadoLeitor.paginaAtual + 1;
-    totalPaginasElemento.textContent = estadoLeitor.totalPaginas;
-}
-
-function irParaPaginaAnterior() {
-    if (estadoLeitor.paginaAtual > 0) {
-        estadoLeitor.paginaAtual--;
-        exibirDocumento();
-        atualizarControlesNavegacao();
-    }
-}
-
-function irParaProximaPagina() {
-    if (estadoLeitor.paginaAtual < estadoLeitor.totalPaginas - 1) {
-        estadoLeitor.paginaAtual++;
-        exibirDocumento();
-        atualizarControlesNavegacao();
-    }
-}
-
-// ============================================
-// FunÃ§Ãµes de AnotaÃ§Ãµes
-// ============================================
-
-function salvarAnotacoes() {
-    if (!estadoLeitor.documentoAtual) return;
-
-    const anotacaoTexto = areaAnotacoes.value.trim();
-    const chaveArmazenamento = `anotacoes_${estadoLeitor.documentoAtual.id}`;
-
-    localStorage.setItem(chaveArmazenamento, anotacaoTexto);
-    alert('AnotaÃ§Ãµes salvas com sucesso!');
-}
-
-function carregarAnotacoes() {
-    if (!estadoLeitor.documentoAtual) {
-        areaAnotacoes.value = '';
-        return;
-    }
-
-    const chaveArmazenamento = `anotacoes_${estadoLeitor.documentoAtual.id}`;
-    const anotacoes = localStorage.getItem(chaveArmazenamento) || '';
-    areaAnotacoes.value = anotacoes;
-}
-
-// ============================================
-// FunÃ§Ãµes UtilitÃ¡rias
-// ============================================
-
-function formatarTamanhoArquivo(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const tamanhos = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + tamanhos[i];
-}
-
-function truncarTexto(texto, limite) {
-    return texto.length > limite ? texto.substring(0, limite) + '...' : texto;
-}
-
-// ============================================
-// FunÃ§Ãµes de InicializaÃ§Ã£o
-// ============================================
 
 function inicializarEventosLeitor() {
-    // Upload
-    entradaArquivo.addEventListener('change', procesarArquivoSelecionado);
-
-    // Ferramentas
-    botaoZoomAumentar.addEventListener('click', aumentarZoom);
-    botaoZoomDiminuir.addEventListener('click', diminuirZoom);
-    botaoRotacionar.addEventListener('click', rotacionarDocumento);
-    botaoDownload.addEventListener('click', baixarDocumento);
-
-    // NavegaÃ§Ã£o
-    botaoPaginaAnterior.addEventListener('click', irParaPaginaAnterior);
-    botaoProximaPagina.addEventListener('click', irParaProximaPagina);
-
-    // AnotaÃ§Ãµes
-    botaoSalvarAnotacoes.addEventListener('click', salvarAnotacoes);
-
-    // Voltar
-    botaoVoltar.addEventListener('click', () => {
-        window.location.href = '/home.html';
-    });
-
-    // Carregar anotaÃ§Ãµes ao selecionar documento
-    const observadorDocumento = new MutationObserver(() => {
-        carregarAnotacoes();
-    });
+    botaoVoltar?.addEventListener('click', voltarParaHome);
+    botaoIniciarScanner?.addEventListener('click', iniciarScannerQRCode);
+    botaoPararScanner?.addEventListener('click', pararScannerQRCode);
 }
 
 function inicializarPaginaLeitor() {
-    // Verificar autenticaÃ§Ã£o
     if (!verificarAutenticacaoLeitor()) {
         return;
     }
 
-    // Inicializar eventos
     inicializarEventosLeitor();
-
-    // Exibir placeholder inicial
-    exibirDocumento();
-    atualizarControlesNavegacao();
-
-    // Solicitar permissão e abrir câmera automaticamente
-    solicitarPermissaoCameraEIniciar();
+    iniciarScannerQRCode();
 }
-
-// ============================================
-// ExecuÃ§Ã£o Inicial
-// ============================================
 
 document.addEventListener('DOMContentLoaded', inicializarPaginaLeitor);
-
-// ============================================
-// FunÃ§Ãµes de Upload de Arquivo
-// ============================================
-
-function procesarArquivoSelecionado(evento) {
-    const arquivo = evento.target.files[0];
-    
-    if (!arquivo) return;
-
-    // Validar tipo de arquivo
-    if (!validarTipoArquivo(arquivo)) {
-        alert('Tipo de arquivo nÃ£o suportado!');
-        return;
-    }
-
-    // Validar tamanho (mÃ¡ximo 10MB)
-    if (arquivo.size > 10 * 1024 * 1024) {
-        alert('Arquivo muito grande! MÃ¡ximo: 10MB');
-        return;
-    }
-
-    adicionarDocumentoCarregado(arquivo);
-}
-
-function validarTipoArquivo(arquivo) {
-    const tiposPermitidos = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/jpeg', 'image/png'];
-    return tiposPermitidos.includes(arquivo.type);
-}
-
-function adicionarDocumentoCarregado(arquivo) {
-    const documentoNovo = {
-        id: Date.now(),
-        nome: arquivo.name,
-        tipo: arquivo.type,
-        tamanho: arquivo.size,
-        data: new Date().toLocaleString('pt-BR'),
-        arquivo: arquivo,
-    };
-
-    estadoLeitor.documentosCarregados.push(documentoNovo);
-    atualizarListaDocumentos();
-
-    // Selecionar automaticamente o novo documento
-    selecionarDocumento(documentoNovo.id);
-}
-
-// ============================================
-// FunÃ§Ãµes de Gerenciamento de Documentos
-// ============================================
-
-function atualizarListaDocumentos() {
-    if (estadoLeitor.documentosCarregados.length === 0) {
-        listaDocumentos.innerHTML = '<p class="vazio">Nenhum documento carregado</p>';
-        return;
-    }
-
-    listaDocumentos.innerHTML = estadoLeitor.documentosCarregados
-        .map(doc => `
-            <div class="item-documento ${doc.id === estadoLeitor.documentoAtual?.id ? 'ativo' : ''}" data-id="${doc.id}">
-                <div class="nome-item-doc">${truncarTexto(doc.nome, 20)}</div>
-                <div class="tamanho-item-doc">${formatarTamanhoArquivo(doc.tamanho)}</div>
-            </div>
-        `)
-        .join('');
-
-    // Adicionar event listeners aos itens
-    document.querySelectorAll('.item-documento').forEach(item => {
-        item.addEventListener('click', (e) => {
-            const id = parseInt(e.currentTarget.dataset.id);
-            selecionarDocumento(id);
-        });
-    });
-}
-
-function selecionarDocumento(id) {
-    const documento = estadoLeitor.documentosCarregados.find(doc => doc.id === id);
-    
-    if (!documento) return;
-
-    estadoLeitor.documentoAtual = documento;
-    estadoLeitor.paginaAtual = 0;
-    estadoLeitor.totalPaginas = 1; // Simulado para este exemplo
-    estadoLeitor.nivelZoom = 100;
-    estadoLeitor.rotacao = 0;
-
-    atualizarListaDocumentos();
-    exibirDocumento();
-    atualizarInformacoesDocumento();
-    atualizarControlesNavegacao();
-}
-
-function exibirDocumento() {
-    if (!estadoLeitor.documentoAtual) {
-        areaDocumento.innerHTML = `
-            <div class="placeholder-documento">
-                <div class="icone-placeholder">ðŸ“„</div>
-                <p>Selecione um documento para visualizar</p>
-            </div>
-        `;
-        return;
-    }
-
-    const { nome, tipo, arquivo } = estadoLeitor.documentoAtual;
-
-    // Simular visualizaÃ§Ã£o do documento
-    if (tipo.includes('image')) {
-        const leitorArquivo = new FileReader();
-        leitorArquivo.onload = (e) => {
-            areaDocumento.innerHTML = `
-                <img src="${e.target.result}" style="max-width: 100%; max-height: 100%; object-fit: contain; transform: scale(${estadoLeitor.nivelZoom / 100}) rotate(${estadoLeitor.rotacao}deg);" />
-            `;
-        };
-        leitorArquivo.readAsDataURL(arquivo);
-    } else {
-        areaDocumento.innerHTML = `
-            <div style="text-align: center; color: #999;">
-                <div style="font-size: 48px; margin-bottom: 20px;">ðŸ“„</div>
-                <p>${nome}</p>
-                <p style="font-size: 12px; margin-top: 10px;">Tipo: ${tipo}</p>
-                <p style="font-size: 12px; color: #ccc;">VisualizaÃ§Ã£o de ${tipo} nÃ£o suportada no navegador</p>
-            </div>
-        `;
-    }
-}
-
-function atualizarInformacoesDocumento() {
-    if (!estadoLeitor.documentoAtual) {
-        infoNomeDoc.textContent = 'â€”';
-        infoTipoDoc.textContent = 'â€”';
-        infoTamanhoDoc.textContent = 'â€”';
-        infoDataDoc.textContent = 'â€”';
-        return;
-    }
-
-    const { nome, tipo, tamanho, data } = estadoLeitor.documentoAtual;
-
-    infoNomeDoc.textContent = nome;
-    infoTipoDoc.textContent = tipo || 'Desconhecido';
-    infoTamanhoDoc.textContent = formatarTamanhoArquivo(tamanho);
-    infoDataDoc.textContent = data;
-
-    botaoDownload.disabled = false;
-}
-
-// ============================================
-// FunÃ§Ãµes de Ferramentas
-// ============================================
-
-function aumentarZoom() {
-    if (estadoLeitor.nivelZoom < 300) {
-        estadoLeitor.nivelZoom += 25;
-        exibirDocumento();
-    }
-}
-
-function diminuirZoom() {
-    if (estadoLeitor.nivelZoom > 50) {
-        estadoLeitor.nivelZoom -= 25;
-        exibirDocumento();
-    }
-}
-
-function rotacionarDocumento() {
-    estadoLeitor.rotacao = (estadoLeitor.rotacao + 90) % 360;
-    exibirDocumento();
-}
-
-function baixarDocumento() {
-    if (!estadoLeitor.documentoAtual) return;
-
-    const { arquivo } = estadoLeitor.documentoAtual;
-    const linkDownload = document.createElement('a');
-    linkDownload.href = URL.createObjectURL(arquivo);
-    linkDownload.download = arquivo.name;
-    linkDownload.click();
-}
-
-// ============================================
-// FunÃ§Ãµes de NavegaÃ§Ã£o de PÃ¡ginas
-// ============================================
-
-function atualizarControlesNavegacao() {
-    const temAnterior = estadoLeitor.paginaAtual > 0;
-    const temProxima = estadoLeitor.paginaAtual < estadoLeitor.totalPaginas - 1;
-
-    botaoPaginaAnterior.disabled = !temAnterior;
-    botaoProximaPagina.disabled = !temProxima;
-
-    paginaAtualElemento.textContent = estadoLeitor.paginaAtual + 1;
-    totalPaginasElemento.textContent = estadoLeitor.totalPaginas;
-}
-
-function irParaPaginaAnterior() {
-    if (estadoLeitor.paginaAtual > 0) {
-        estadoLeitor.paginaAtual--;
-        exibirDocumento();
-        atualizarControlesNavegacao();
-    }
-}
-
-function irParaProximaPagina() {
-    if (estadoLeitor.paginaAtual < estadoLeitor.totalPaginas - 1) {
-        estadoLeitor.paginaAtual++;
-        exibirDocumento();
-        atualizarControlesNavegacao();
-    }
-}
-
-// ============================================
-// FunÃ§Ãµes de AnotaÃ§Ãµes
-// ============================================
-
-function salvarAnotacoes() {
-    if (!estadoLeitor.documentoAtual) return;
-
-    const anotacaoTexto = areaAnotacoes.value.trim();
-    const chaveArmazenamento = `anotacoes_${estadoLeitor.documentoAtual.id}`;
-
-    localStorage.setItem(chaveArmazenamento, anotacaoTexto);
-    alert('AnotaÃ§Ãµes salvas com sucesso!');
-}
-
-function carregarAnotacoes() {
-    if (!estadoLeitor.documentoAtual) {
-        areaAnotacoes.value = '';
-        return;
-    }
-
-    const chaveArmazenamento = `anotacoes_${estadoLeitor.documentoAtual.id}`;
-    const anotacoes = localStorage.getItem(chaveArmazenamento) || '';
-    areaAnotacoes.value = anotacoes;
-}
-
-// ============================================
-// FunÃ§Ãµes UtilitÃ¡rias
-// ============================================
-
-function formatarTamanhoArquivo(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const tamanhos = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + tamanhos[i];
-}
-
-function truncarTexto(texto, limite) {
-    return texto.length > limite ? texto.substring(0, limite) + '...' : texto;
-}
-
-// ============================================
-// FunÃ§Ãµes de InicializaÃ§Ã£o
-// ============================================
-
-function inicializarEventosLeitor() {
-    // Upload
-    entradaArquivo.addEventListener('change', procesarArquivoSelecionado);
-
-    // Ferramentas
-    botaoZoomAumentar.addEventListener('click', aumentarZoom);
-    botaoZoomDiminuir.addEventListener('click', diminuirZoom);
-    botaoRotacionar.addEventListener('click', rotacionarDocumento);
-    botaoDownload.addEventListener('click', baixarDocumento);
-
-    // NavegaÃ§Ã£o
-    botaoPaginaAnterior.addEventListener('click', irParaPaginaAnterior);
-    botaoProximaPagina.addEventListener('click', irParaProximaPagina);
-
-    // AnotaÃ§Ãµes
-    botaoSalvarAnotacoes.addEventListener('click', salvarAnotacoes);
-
-    // Voltar
-    botaoVoltar.addEventListener('click', () => {
-        window.location.href = '/home.html';
-    });
-
-    // Carregar anotaÃ§Ãµes ao selecionar documento
-    const observadorDocumento = new MutationObserver(() => {
-        carregarAnotacoes();
-    });
-}
-
-function inicializarPaginaLeitor() {
-    // Verificar autenticaÃ§Ã£o
-    if (!verificarAutenticacaoLeitor()) {
-        return;
-    }
-
-    // Inicializar eventos
-    inicializarEventosLeitor();
-
-    // Exibir placeholder inicial
-    exibirDocumento();
-    atualizarControlesNavegacao();
-
-    // Solicitar permissão e abrir câmera automaticamente
-    solicitarPermissaoCameraEIniciar();
-}
-
-// ============================================
-// ExecuÃ§Ã£o Inicial
-// ============================================
-
-document.addEventListener('DOMContentLoaded', inicializarPaginaLeitor);
-
-
-
-
-
-
-
