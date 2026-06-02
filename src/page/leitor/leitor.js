@@ -2,8 +2,7 @@
 // Importações
 // ============================================
 
-import { verificarAutenticacao, fazerRequisicaoPost, CONFIG_API } from '../../utils/api.js';
-import jsQR from 'jsqr';
+import { verificarAutenticacao } from '../../utils/api.js';
 
 // ============================================
 // Elementos do DOM
@@ -12,6 +11,7 @@ import jsQR from 'jsqr';
 const botaoVoltar = document.getElementById('botao-voltar');
 const botaoIniciarScanner = document.getElementById('botao-iniciar-scanner');
 const botaoPararScanner = document.getElementById('botao-parar-scanner');
+const botaoAbrirCamera = document.getElementById('botao-abrir-camera');
 const videoScanner = document.getElementById('video-scanner');
 const mensagemScanner = document.getElementById('mensagem-scanner');
 const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
@@ -180,6 +180,7 @@ function inicializarEventosLeitor() {
     botaoVoltar?.addEventListener('click', voltarParaHome);
     botaoIniciarScanner?.addEventListener('click', iniciarScannerQRCode);
     botaoPararScanner?.addEventListener('click', pararScannerQRCode);
+    botaoAbrirCamera?.addEventListener('click', iniciarScannerQRCode);
 }
 
 function inicializarPaginaLeitor() {
