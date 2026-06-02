@@ -106,9 +106,15 @@ function pararScannerQRCode() {
 async function processarFrameQRCode() {
     if (!scannerAtivo) return;
 
+    if (typeof jsQR !== 'function') {
+        console.error('jsQR não está disponível');
+        mostrarMensagemScanner('Erro interno: biblioteca de leitura QR não carregada.', 'erro');
+        return;
+    }
+
     if (!videoScanner || videoScanner.readyState !== HTMLMediaElement.HAVE_ENOUGH_DATA) {
-        // agendar nova tentativa em 5s
-        scanTimeoutId = setTimeout(processarFrameQRCode, 5000);
+        // vídeo ainda não pronto, tentar novamente em 1s
+        scanTimeoutId = setTimeout(processarFrameQRCode, 1000);
         return;
     }
 
@@ -116,7 +122,15 @@ async function processarFrameQRCode() {
     canvasQRCode.height = videoScanner.videoHeight;
     contextoQRCode.drawImage(videoScanner, 0, 0, canvasQRCode.width, canvasQRCode.height);
 
-    const imageData = contextoQRCode.getImageData(0, 0, canvasQRCode.width, canvasQRCode.height);
+    let imageData;
+    try {
+        imageData = contextoQRCode.getImageData(0, 0, canvasQRCode.width, canvasQRCode.height);
+    } catch (e) {
+        console.warn('Erro ao capturar frame:', e);
+        scanTimeoutId = setTimeout(processarFrameQRCode, 1000);
+        return;
+    }
+
     const codigoQR = jsQR(imageData.data, imageData.width, imageData.height);
 
     if (!codigoQR?.data) {

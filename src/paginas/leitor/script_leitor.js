@@ -89,12 +89,17 @@ function pararCameraScanner() {
 }
 
 async function processarFrameQRCode() {
-    if (!scannerAtivo) {
+    if (!scannerAtivo) return;
+
+    if (typeof jsQR !== 'function' && !barcodeDetector) {
+        console.error('jsQR/BarcodeDetector não disponível');
+        mostrarMensagemScanner('Erro interno: biblioteca de leitura QR não carregada.', 'erro');
         return;
     }
 
     if (!videoScanner || videoScanner.readyState !== HTMLMediaElement.HAVE_ENOUGH_DATA) {
-        animationFrameId = requestAnimationFrame(processarFrameQRCode);
+        // vídeo ainda não pronto, tentar novamente em 1s
+        animationFrameId = setTimeout(processarFrameQRCode, 1000);
         return;
     }
 
@@ -107,21 +112,23 @@ async function processarFrameQRCode() {
     if (barcodeDetector) {
         try {
             const resultados = await barcodeDetector.detect(canvasQRCode);
-            if (resultados.length > 0) {
-                textoQRCode = resultados[0].rawValue;
-            }
+            if (resultados.length > 0) textoQRCode = resultados[0].rawValue;
         } catch (erro) {
             console.warn('BarcodeDetector falhou:', erro);
         }
     }
 
     if (!textoQRCode) {
-        const imageData = contextoQRCode.getImageData(0, 0, canvasQRCode.width, canvasQRCode.height);
-        const codigoQR = jsQR(imageData.data, imageData.width, imageData.height);
-
-        if (codigoQR?.data) {
-            textoQRCode = codigoQR.data;
+        let imageData;
+        try {
+            imageData = contextoQRCode.getImageData(0, 0, canvasQRCode.width, canvasQRCode.height);
+        } catch (e) {
+            console.warn('Erro ao capturar frame:', e);
+            animationFrameId = setTimeout(processarFrameQRCode, 1000);
+            return;
         }
+        const codigoQR = jsQR(imageData.data, imageData.width, imageData.height);
+        if (codigoQR?.data) textoQRCode = codigoQR.data;
     }
 
     if (textoQRCode) {
@@ -131,14 +138,24 @@ async function processarFrameQRCode() {
             mostrarMensagemScanner(`QR detectado: ${idChamada}`, 'sucesso');
             scannerAtivo = false;
             pararCameraScanner();
-            await enviarPresencaCongresso(idChamada);
+            const resultado = await enviarPresencaCongresso(idChamada);
+            if (resultado?.ok) {
+                mostrarMensagemScanner('Presença registrada com sucesso!', 'sucesso');
+                setTimeout(() => { window.location.href = '../home/pagina_home.html'; }, 1500);
+                return;
+            }
+            mostrarMensagemScanner(resultado?.mensagem || 'Erro ao enviar presença.', 'erro');
+            // reativar e tentar novamente em 5s
+            scannerAtivo = true;
+            animationFrameId = setTimeout(processarFrameQRCode, 5000);
             return;
         }
 
         mostrarMensagemScanner('QR detectado, mas id_chamada não foi encontrado.', 'erro');
     }
 
-    animationFrameId = requestAnimationFrame(processarFrameQRCode);
+    // nenhum QR detectado: tentar novamente em 5s
+    animationFrameId = setTimeout(processarFrameQRCode, 5000);
 }
 
 async function iniciarCameraScanner() {
