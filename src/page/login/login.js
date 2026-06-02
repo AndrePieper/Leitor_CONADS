@@ -68,8 +68,10 @@ async function processarLogin() {
 
     try {
         const resposta = await enviarRequisicaoLogin(email, senha);
+        console.log('Login retornou:', resposta);
         await realizarRedirecionamentoParaHome(resposta, email);
     } catch (erro) {
+        console.log('Erro no login:', erro);
         mostrarErro(erro.mensagem || 'Erro ao fazer login. Tente novamente.');
         limparCampos();
     } finally {
