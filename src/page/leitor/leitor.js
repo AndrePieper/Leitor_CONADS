@@ -2,7 +2,7 @@
 // Importações
 // ============================================
 
-import { verificarAutenticacao } from '../../utils/api.js';
+import { CONFIG_API, fazerRequisicaoPost } from '../../utils/api.js';
 
 // ============================================
 // Elementos do DOM
@@ -46,7 +46,7 @@ function extrairIdChamadaDoQRCode(textoQRCode) {
 }
 
 async function enviarPresencaCongresso(idChamada) {
-    const idAluno = sessionStorage.getItem('usuarioId') || sessionStorage.getItem('usuarioLogado');
+    const idAluno = localStorage.getItem('usuarioId') || sessionStorage.getItem('usuarioId') || localStorage.getItem('usuarioLogado') || sessionStorage.getItem('usuarioLogado');
 
     if (!idAluno) {
         return { ok: false, status: null, mensagem: 'ID do aluno não encontrado. Faça login novamente.' };
@@ -59,37 +59,15 @@ async function enviarPresencaCongresso(idChamada) {
         tipo_presenca: 1,
     };
 
-    const endpointBase = 'https://projeto-iii-4.vercel.app/alunos/congresso';
-    const urls = [endpointBase, endpointBase.endsWith('/') ? endpointBase : endpointBase + '/'];
-
-    for (const url of urls) {
-        console.info('Tentando endpoint de presença:', url);
-        try {
-            const resposta = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dadosPresenca),
-            });
-
-            const conteudo = await resposta.json().catch(() => null);
-
-            if (!resposta.ok) {
-                if (resposta.status === 404 && !url.endsWith('/')) {
-                    continue; // tentar com /
-                }
-                return { ok: false, status: resposta.status, mensagem: conteudo?.mensagem || conteudo?.erro || `Status ${resposta.status}` };
-            }
-
-            return { ok: true, status: resposta.status, dados: conteudo };
-        } catch (erro) {
-            console.error('Erro ao enviar presença:', erro);
-            if (url.endsWith('/')) {
-                return { ok: false, status: null, mensagem: erro.message || 'Erro ao enviar presença.' };
-            }
+    try {
+        const resposta = await fazerRequisicaoPost(CONFIG_API.ENDPOINTS.PRESENCA_CONGRESSO, dadosPresenca);
+        return { ok: true, status: 200, dados: resposta };
+    } catch (erro) {
+        if (erro.status === 404) {
+            return { ok: false, status: 404, mensagem: erro.mensagem || 'Endpoint de presença não encontrado.' };
         }
+        return { ok: false, status: erro.status || null, mensagem: erro.mensagem || 'Erro ao enviar presença.' };
     }
-
-    return { ok: false, status: 404, mensagem: 'Endpoint de presença não encontrado.' };
 }
 
 function pararScannerQRCode() {
@@ -201,7 +179,7 @@ async function iniciarScannerQRCode() {
 }
 
 function verificarAutenticacaoLeitor() {
-    const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+    const usuarioLogado = localStorage.getItem('usuarioLogado') || sessionStorage.getItem('usuarioLogado');
 
     if (!usuarioLogado) {
         window.location.href = '/login.html';

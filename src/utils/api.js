@@ -7,23 +7,47 @@ export const CONFIG_API = {
     ENDPOINTS: {
         LOGIN: '/login/app_web',
         PRESENCA_CONGRESSO: '/alunos/congresso',
+        USUARIOS: '/usuarios',
         // Adicione outros endpoints conforme necessário
     }
 };
 
-// ============================================
-// Utilitários para Requisições HTTP
-// ============================================
+function decodificarJwtPayload(token) {
+    if (!token) return null;
+
+    const partes = token.split('.');
+    if (partes.length !== 3) return null;
+
+    try {
+        const payload = partes[1].replace(/-/g, '+').replace(/_/g, '/');
+        const decoded = atob(payload);
+        return JSON.parse(decoded);
+    } catch (erro) {
+        console.error('Erro ao decodificar payload JWT:', erro);
+        return null;
+    }
+}
+
+export function obterTokenAutenticacao() {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+}
 
 export async function fazerRequisicaoPost(endpoint, dados) {
     const urlCompleta = CONFIG_API.URL_BASE + endpoint;
+    const tokenAutenticacao = obterTokenAutenticacao();
 
     try {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (tokenAutenticacao) {
+            headers['Authorization'] = `Bearer ${tokenAutenticacao}`;
+        }
+
         const resposta = await fetch(urlCompleta, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers,
             body: JSON.stringify(dados)
         });
 
@@ -52,7 +76,7 @@ export async function fazerRequisicaoPost(endpoint, dados) {
 
 export async function fazerRequisicaoGet(endpoint) {
     const urlCompleta = CONFIG_API.URL_BASE + endpoint;
-    const tokenAutenticacao = sessionStorage.getItem('token');
+    const tokenAutenticacao = obterTokenAutenticacao();
 
     try {
         const opcoes = {
@@ -62,7 +86,6 @@ export async function fazerRequisicaoGet(endpoint) {
             }
         };
 
-        // Adicionar token se existir
         if (tokenAutenticacao) {
             opcoes.headers['Authorization'] = `Bearer ${tokenAutenticacao}`;
         }
@@ -96,9 +119,6 @@ export async function fazerRequisicaoGet(endpoint) {
 // ============================================
 
 export function armazenarDadosSessao(dadosResposta, email) {
-    sessionStorage.setItem('usuarioLogado', email);
-    sessionStorage.setItem('dataLogin', new Date().toISOString());
-
     const token =
         dadosResposta?.token ||
         dadosResposta?.accessToken ||
@@ -109,15 +129,33 @@ export function armazenarDadosSessao(dadosResposta, email) {
         dadosResposta?.data?.accessToken;
 
     if (token) {
+        const payload = decodificarJwtPayload(token);
+
+        localStorage.setItem('token', token);
         sessionStorage.setItem('token', token);
+
+        if (payload) {
+            localStorage.setItem('usuarioId', String(payload.id ?? ''));
+            localStorage.setItem('usuarioTipo', String(payload.tipo ?? ''));
+            localStorage.setItem('usuarioPayload', JSON.stringify(payload));
+
+            sessionStorage.setItem('usuarioId', String(payload.id ?? ''));
+            sessionStorage.setItem('usuarioTipo', String(payload.tipo ?? ''));
+            sessionStorage.setItem('usuarioPayload', JSON.stringify(payload));
+        }
+
+        const usuarioLogado = payload?.email || payload?.usuario || email;
+        localStorage.setItem('usuarioLogado', usuarioLogado);
+        sessionStorage.setItem('usuarioLogado', usuarioLogado);
+    } else {
+        localStorage.setItem('usuarioLogado', email);
+        sessionStorage.setItem('usuarioLogado', email);
+        sessionStorage.setItem('usuarioId', email);
+        localStorage.setItem('usuarioId', email);
     }
 
-    if (dadosResposta.id || dadosResposta.usuarioId) {
-        sessionStorage.setItem('usuarioId', dadosResposta.id || dadosResposta.usuarioId);
-    } else {
-        // Se o backend não retornar um id numérico, armazenar o e-mail como fallback de identificador de usuário
-        sessionStorage.setItem('usuarioId', email);
-    }
+    localStorage.setItem('dataLogin', new Date().toISOString());
+    sessionStorage.setItem('dataLogin', new Date().toISOString());
 }
 
 export function limparSessao() {
@@ -125,12 +163,17 @@ export function limparSessao() {
     sessionStorage.removeItem('dataLogin');
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('usuarioId');
-}
+    sessionStorage.removeItem('usuarioTipo');
+    sessionStorage.removeItem('usuarioPayload');
 
-export function obterTokenAutenticacao() {
-    return sessionStorage.getItem('token');
+    localStorage.removeItem('usuarioLogado');
+    localStorage.removeItem('dataLogin');
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuarioId');
+    localStorage.removeItem('usuarioTipo');
+    localStorage.removeItem('usuarioPayload');
 }
 
 export function verificarAutenticacao() {
-    return sessionStorage.getItem('usuarioLogado') !== null;
+    return Boolean( obterTokenAutenticacao() );
 }
