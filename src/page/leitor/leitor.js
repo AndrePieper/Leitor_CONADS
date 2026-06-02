@@ -2,6 +2,7 @@
 // Importações
 // ============================================
 
+import jsQR from 'jsqr';
 import { CONFIG_API, fazerRequisicaoPost } from '../../utils/api.js';
 
 // ============================================
