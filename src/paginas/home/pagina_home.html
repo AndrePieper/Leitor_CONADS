@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
@@ -8,75 +8,21 @@
 </head>
 <body>
     <div class="interface-home">
-        <!-- Barra de Navegação -->
-        <nav class="barra-navegacao">
-            <div class="conteudo-nav">
-                <div class="logo-nav">
-                    <h1>CONADSI 2026</h1>
-                </div>
-                <div class="menu-usuario">
-                    <span id="nome-usuario-exibido" class="nome-usuario"></span>
-                    <button id="botao-sair" class="botao-sair">Sair</button>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Conteúdo Principal -->
         <main class="conteudo-principal-home">
-            <div class="secao-boas-vindas">
-                <h2>Bem-vindo ao Sistema CONADSI!</h2>
-                <p>Selecione uma das opções abaixo para continuar:</p>
-            </div>
-
-            <div class="grade-opcoes">
-                <!-- Cartão Leitor de Documentos -->
-                <div class="cartao-opcao">
-                    <div class="icone-opcao">📄</div>
-                    <h3>Leitor de Documentos</h3>
-                    <p>Faça a leitura e análise de documentos CONADS</p>
-                    <button 
-                        id="botao-ir-leitor" 
-                        class="botao-secundario"
-                    >
-                        Acessar Leitor
-                    </button>
+            <div class="cartao-home">
+                <div class="marca-home">
+                    <div class="titulo-marca">CONADSI<br />2026</div>
+                    <div class="logos-home">
+                        <img src="../../assets/images/Img1.png" alt="UNIFASIPE" />
+                        <img src="../../assets/images/Img2.png" alt="Análise e Desenvolvimento de Sistemas" />
+                    </div>
                 </div>
 
-                <!-- Cartão Relatórios -->
-                <div class="cartao-opcao">
-                    <div class="icone-opcao">📊</div>
-                    <h3>Relatórios</h3>
-                    <p>Visualize relatórios e estatísticas do sistema</p>
-                    <button class="botao-secundario" disabled>
-                        Em Desenvolvimento
-                    </button>
-                </div>
-
-                <!-- Cartão Configurações -->
-                <div class="cartao-opcao">
-                    <div class="icone-opcao">⚙️</div>
-                    <h3>Configurações</h3>
-                    <p>Ajuste as preferências da sua conta</p>
-                    <button class="botao-secundario" disabled>
-                        Em Desenvolvimento
-                    </button>
-                </div>
-            </div>
-
-            <!-- Informações da Sessão -->
-            <div class="painel-informacoes">
-                <div class="info-sessao">
-                    <h4>Informações da Sessão</h4>
-                    <p>Usuário: <span id="usuario-info"></span></p>
-                    <p>Login em: <span id="data-login-info"></span></p>
+                <div class="acoes-home">
+                    <button id="botao-ir-leitor" class="botao-primario">Registrar</button>
                 </div>
             </div>
         </main>
-
-        <!-- Rodapé -->
-        <footer class="rodape-home">
-            <p>&copy; 2026 CONADSI - UNIFASIPE. Todos os direitos reservados.</p>
-        </footer>
     </div>
 
     <script type="module" src="script_home.js"></script>

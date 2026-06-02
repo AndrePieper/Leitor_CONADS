@@ -792,7 +792,13 @@ function inicializarPaginaLeitor() {
     // Inicializar eventos
     inicializarEventosLeitor();
 
-        // Exibir placeholder inicial\n    exibirDocumento();\n    atualizarControlesNavegacao();\n\n    // Solicitar permissão e abrir câmera automaticamente\n    solicitarPermissaoCameraEIniciar();\n}
+    // Exibir placeholder inicial
+    exibirDocumento();
+    atualizarControlesNavegacao();
+
+    // Solicitar permissão e abrir câmera automaticamente
+    solicitarPermissaoCameraEIniciar();
+}
 
 // ============================================
 // ExecuÃ§Ã£o Inicial

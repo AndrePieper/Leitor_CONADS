@@ -1,4 +1,4 @@
-* {
+﻿* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -6,231 +6,100 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f5f7fa;
+    background: #d8d8d8;
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 18px;
 }
 
 .interface-home {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    width: 100%;
+    max-width: 420px;
 }
-
-/* ============================================
-   Barra de Navegação
-   ============================================ */
-
-.barra-navegacao {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.conteudo-nav {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 15px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo-nav h1 {
-    font-size: 24px;
-    font-weight: 700;
-}
-
-.menu-usuario {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.nome-usuario {
-    font-weight: 500;
-    font-size: 14px;
-}
-
-.botao-sair {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.3s ease;
-}
-
-.botao-sair:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
-}
-
-/* ============================================
-   Conteúdo Principal
-   ============================================ */
 
 .conteudo-principal-home {
-    flex: 1;
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
-    padding: 40px 30px;
-}
-
-.secao-boas-vindas {
-    text-align: center;
-    margin-bottom: 50px;
-}
-
-.secao-boas-vindas h2 {
-    color: #333;
-    font-size: 32px;
-    margin-bottom: 10px;
-}
-
-.secao-boas-vindas p {
-    color: #666;
-    font-size: 16px;
-}
-
-/* ============================================
-   Grade de Opções
-   ============================================ */
-
-.grade-opcoes {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-bottom: 40px;
-}
-
-.cartao-opcao {
-    background: white;
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    text-align: center;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0;
 }
 
-.cartao-opcao:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+.cartao-home {
+    width: 100%;
+    background: #f0f0f0;
+    border-radius: 30px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 32px 24px 28px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
 }
 
-.icone-opcao {
-    font-size: 48px;
-    margin-bottom: 20px;
+.marca-home {
+    text-align: center;
+    margin-bottom: 34px;
 }
 
-.cartao-opcao h3 {
-    color: #333;
-    font-size: 20px;
-    margin-bottom: 10px;
+.titulo-marca {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: #111111;
+    line-height: 1.05;
+    margin-bottom: 24px;
 }
 
-.cartao-opcao p {
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 20px;
-    flex: 1;
+.logos-home {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
 }
 
-.botao-secundario {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.logos-home img {
+    width: 48%;
+    min-width: 120px;
+    border-radius: 18px;
+    background: white;
+    padding: 12px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.acoes-home {
+    display: flex;
+    justify-content: center;
+}
+
+.botao-primario {
+    width: 100%;
+    max-width: 320px;
+    padding: 18px 22px;
+    background: #0f7b2e;
     color: white;
     border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-weight: 600;
+    border-radius: 18px;
+    font-size: 17px;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.botao-secundario:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.botao-primario:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 32px rgba(15, 123, 46, 0.24);
 }
 
-.botao-secundario:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* ============================================
-   Painel de Informações
-   ============================================ */
-
-.painel-informacoes {
-    background: white;
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    margin-bottom: 30px;
-}
-
-.info-sessao h4 {
-    color: #333;
-    margin-bottom: 15px;
-    font-size: 16px;
-}
-
-.info-sessao p {
-    color: #666;
-    font-size: 14px;
-    margin: 8px 0;
-}
-
-.info-sessao span {
-    font-weight: 600;
-    color: #667eea;
-}
-
-/* ============================================
-   Rodapé
-   ============================================ */
-
-.rodape-home {
-    background: #f0f2f5;
-    padding: 20px 30px;
-    text-align: center;
-    border-top: 1px solid #e0e0e0;
-    color: #999;
-    font-size: 13px;
-    margin-top: auto;
-}
-
-/* ============================================
-   Responsividade
-   ============================================ */
-
-@media (max-width: 768px) {
-    .conteudo-nav {
-        flex-direction: column;
-        gap: 15px;
+@media (max-width: 520px) {
+    .interface-home {
+        max-width: 100%;
     }
 
-    .secao-boas-vindas h2 {
-        font-size: 24px;
+    .cartao-home {
+        padding: 26px 20px 24px;
     }
 
-    .grade-opcoes {
-        grid-template-columns: 1fr;
-    }
-
-    .conteudo-principal-home {
-        padding: 20px 15px;
+    .titulo-marca {
+        font-size: 34px;
     }
 }

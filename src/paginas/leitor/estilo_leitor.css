@@ -1,4 +1,4 @@
-* {
+﻿* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -6,407 +6,230 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f5f7fa;
+    background: #d8d8d8;
     min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 18px;
 }
 
 .interface-leitor {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-/* ============================================
-   Barra Superior
-   ============================================ */
-
-.barra-superior-leitor {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.conteudo-barra {
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 15px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-}
-
-.botao-voltar {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
-
-.botao-voltar:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.conteudo-barra h1 {
-    font-size: 20px;
-    flex: 1;
-    text-align: center;
-}
-
-.info-usuario-leitor {
-    font-size: 14px;
-}
-
-/* ============================================
-   Área Principal (3 Colunas)
-   ============================================ */
-
-.area-principal-leitor {
-    display: grid;
-    grid-template-columns: 250px 1fr 280px;
-    gap: 0;
-    flex: 1;
+    width: 100%;
+    max-width: 420px;
+    background: #f0f0f0;
+    border-radius: 30px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
     overflow: hidden;
 }
 
-/* ============================================
-   Painel Lateral Esquerdo
-   ============================================ */
+.barra-superior-leitor {
+    padding: 22px 22px 8px;
+    text-align: center;
+}
 
-.painel-lateral-leitor {
-    background: white;
-    border-right: 1px solid #e0e0e0;
-    overflow-y: auto;
+.conteudo-barra {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.botao-voltar {
+    width: 100%;
+    max-width: 240px;
+    margin: 0 auto;
+    background: #0f7b2e;
+    color: white;
+    border: none;
+    border-radius: 18px;
+    padding: 16px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.conteudo-barra h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0;
+}
+
+.area-principal-leitor {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
     padding: 20px;
 }
 
-.painel-lateral-leitor > div {
-    margin-bottom: 25px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid #f0f0f0;
+.painel-lateral-leitor {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
-.painel-lateral-leitor > div:last-child {
-    border-bottom: none;
+.secao-scanner,
+.secao-documentos,
+.secao-ferramentas {
+    background: white;
+    border-radius: 28px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 22px;
 }
 
-.painel-lateral-leitor h3 {
-    color: #333;
+.secao-scanner h3,
+.secao-documentos h3,
+.secao-ferramentas h3 {
     font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 16px;
 }
-
-/* Seção Upload */
 
 .entrada-arquivo {
     display: none;
 }
 
-.botao-upload {
-    display: block;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 12px 16px;
-    border-radius: 6px;
-    text-align: center;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 13px;
-    transition: all 0.3s ease;
-    margin-bottom: 10px;
-}
-
-.botao-upload:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.ajuda-upload {
-    font-size: 11px;
-    color: #999;
-    text-align: center;
-}
-
-/* Lista de Documentos */
-
-.lista-documentos {
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.item-documento {
-    background: #f9f9f9;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-left: 3px solid transparent;
-}
-
-.item-documento:hover {
-    background: #f0f0f0;
-    border-left-color: #667eea;
-}
-
-.item-documento.ativo {
-    background: #e8eaf6;
-    border-left-color: #667eea;
-}
-
-.nome-item-doc {
-    font-weight: 600;
-    font-size: 12px;
-    color: #333;
-    word-break: break-word;
-}
-
-.tamanho-item-doc {
-    font-size: 11px;
-    color: #999;
-    margin-top: 5px;
-}
-
-.vazio {
-    color: #999;
-    font-size: 12px;
-    text-align: center;
-    padding: 20px 0;
-}
-
-/* Ferramentas */
-
-.botao-ferramenta {
+.botao-upload,
+.botao-ferramenta,
+.botao-acao {
     width: 100%;
-    background: white;
-    border: 1px solid #e0e0e0;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    color: #333;
-    transition: all 0.2s ease;
-}
-
-.botao-ferramenta:hover:not(:disabled) {
-    background: #f0f0f0;
-    border-color: #667eea;
-    color: #667eea;
-}
-
-.botao-ferramenta:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* ============================================
-   Área de Visualização
-   ============================================ */
-
-.area-visualizacao-leitor {
-    background: #f0f0f0;
-    display: flex;
-    flex-direction: column;
-}
-
-.area-documento {
-    flex: 1;
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.placeholder-documento {
-    text-align: center;
-    color: #999;
-}
-
-.icone-placeholder {
-    font-size: 64px;
-    margin-bottom: 20px;
-}
-
-.controles-navegacao {
-    background: white;
-    border-top: 1px solid #e0e0e0;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-}
-
-.botao-pagina {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #0f7b2e;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
+    border-radius: 18px;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 700;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 12px;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.botao-pagina:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+.botao-upload:hover,
+.botao-ferramenta:hover,
+.botao-acao:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(15, 123, 46, 0.2);
 }
 
-.botao-pagina:disabled {
-    opacity: 0.5;
+.botao-ferramenta:disabled,
+.botao-acao:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
-.indicador-pagina {
-    background: #f0f0f0;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-weight: 600;
-    color: #333;
-    min-width: 100px;
-    text-align: center;
-}
-
-/* ============================================
-   Painel Direito
-   ============================================ */
-
-.painel-direito-leitor {
-    background: white;
-    border-left: 1px solid #e0e0e0;
-    overflow-y: auto;
-    padding: 20px;
-}
-
-.painel-direito-leitor > div {
-    margin-bottom: 25px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.painel-direito-leitor > div:last-child {
-    border-bottom: none;
-}
-
-.painel-direito-leitor h3 {
-    color: #333;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.info-item {
-    margin-bottom: 12px;
+.scanner-acoes {
     display: flex;
     flex-direction: column;
+    gap: 12px;
 }
 
-.label-info {
-    font-size: 11px;
-    font-weight: 600;
-    color: #999;
-    text-transform: uppercase;
-    margin-bottom: 4px;
+.scanner-area {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 28px;
+    background: white;
+    border: 1px solid #ccc;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.valor-info {
-    font-size: 13px;
-    color: #333;
-    word-break: break-word;
+.scanner-area video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+}
+
+.scanner-area::before,
+.scanner-area::after,
+.scanner-area::nth-child(3),
+.scanner-area::nth-child(4) {
+    content: '';
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border: 4px solid #111;
+}
+
+.scanner-area::before {
+    top: 18px;
+    left: 18px;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+}
+
+.scanner-area::after {
+    top: 18px;
+    right: 18px;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+}
+
+.scanner-area::nth-child(3) {
+    bottom: 18px;
+    left: 18px;
+    border-right-color: transparent;
+    border-top-color: transparent;
+}
+
+.scanner-area::nth-child(4) {
+    bottom: 18px;
+    right: 18px;
+    border-left-color: transparent;
+    border-top-color: transparent;
+}
+
+.mensagem-scanner {
+    margin-top: 14px;
+    background: #ffffff;
+    border: 1px solid rgba(15, 123, 46, 0.18);
+    color: #264c27;
+    padding: 14px 16px;
+    border-radius: 18px;
+    text-align: center;
+    font-size: 14px;
 }
 
 .campo-anotacoes {
     width: 100%;
     min-height: 120px;
-    padding: 10px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 12px;
-    resize: vertical;
-    margin-bottom: 10px;
+    padding: 16px;
+    border: 1px solid #d1d1d1;
+    border-radius: 18px;
+    font-size: 14px;
 }
 
-.campo-anotacoes:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
+.botao-ferramenta,
 .botao-acao {
-    width: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 12px;
-    transition: all 0.3s ease;
+    margin-top: 6px;
 }
 
-.botao-acao:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-/* ============================================
-   Responsividade
-   ============================================ */
-
-@media (max-width: 1200px) {
-    .area-principal-leitor {
-        grid-template-columns: 200px 1fr 200px;
+@media (max-width: 520px) {
+    body {
+        padding: 12px;
     }
 
-    .painel-lateral-leitor,
-    .painel-direito-leitor {
-        padding: 15px;
-    }
-
-    .conteudo-barra h1 {
-        font-size: 16px;
-    }
-}
-
-@media (max-width: 768px) {
-    .area-principal-leitor {
-        grid-template-columns: 1fr;
-    }
-
-    .painel-lateral-leitor,
-    .painel-direito-leitor {
-        border: none;
-        max-height: 200px;
+    .interface-leitor {
+        max-width: 100%;
+        padding: 0;
     }
 
     .conteudo-barra {
         flex-direction: column;
-        padding: 10px 15px;
+        gap: 12px;
+        padding: 18px;
     }
 
     .conteudo-barra h1 {
-        font-size: 14px;
+        font-size: 22px;
+    }
+
+    .painel-lateral-leitor {
+        padding: 18px;
     }
 }
