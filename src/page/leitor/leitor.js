@@ -59,24 +59,37 @@ async function enviarPresencaCongresso(idChamada) {
         tipo_presenca: 1,
     };
 
-    try {
-        const resposta = await fetch('https://projeto-iii-4.vercel.app/alunos/congresso', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dadosPresenca),
-        });
+    const endpointBase = 'https://projeto-iii-4.vercel.app/alunos/congresso';
+    const urls = [endpointBase, endpointBase.endsWith('/') ? endpointBase : endpointBase + '/'];
 
-        const conteudo = await resposta.json().catch(() => null);
+    for (const url of urls) {
+        console.info('Tentando endpoint de presença:', url);
+        try {
+            const resposta = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosPresenca),
+            });
 
-        if (!resposta.ok) {
-            return { ok: false, status: resposta.status, mensagem: conteudo?.mensagem || conteudo?.erro || `Status ${resposta.status}` };
+            const conteudo = await resposta.json().catch(() => null);
+
+            if (!resposta.ok) {
+                if (resposta.status === 404 && !url.endsWith('/')) {
+                    continue; // tentar com /
+                }
+                return { ok: false, status: resposta.status, mensagem: conteudo?.mensagem || conteudo?.erro || `Status ${resposta.status}` };
+            }
+
+            return { ok: true, status: resposta.status, dados: conteudo };
+        } catch (erro) {
+            console.error('Erro ao enviar presença:', erro);
+            if (url.endsWith('/')) {
+                return { ok: false, status: null, mensagem: erro.message || 'Erro ao enviar presença.' };
+            }
         }
-
-        return { ok: true, status: resposta.status, dados: conteudo };
-    } catch (erro) {
-        console.error('Erro ao enviar presença:', erro);
-        return { ok: false, status: null, mensagem: erro.message || 'Erro ao enviar presença.' };
     }
+
+    return { ok: false, status: 404, mensagem: 'Endpoint de presença não encontrado.' };
 }
 
 function pararScannerQRCode() {
