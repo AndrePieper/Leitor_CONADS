@@ -1,7 +1,6 @@
 ﻿import jsQR from 'jsqr';
 
 const botaoVoltar = document.getElementById('botao-voltar');
-const botaoAbrirCamera = document.getElementById('botao-abrir-camera');
 const videoScanner = document.getElementById('video-scanner');
 const mensagemScanner = document.getElementById('mensagem-scanner');
 const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
@@ -193,10 +192,6 @@ function inicializarPaginaLeitor() {
 
     if (botaoVoltar) {
         botaoVoltar.addEventListener('click', voltarParaHome);
-    }
-
-    if (botaoAbrirCamera) {
-        botaoAbrirCamera.addEventListener('click', iniciarCameraScanner);
     }
 
     iniciarCameraScanner();
