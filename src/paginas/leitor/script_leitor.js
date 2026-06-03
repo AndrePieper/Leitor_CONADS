@@ -113,14 +113,30 @@ async function obterStreamCameraPreferida() {
 }
 
 async function iniciarCameraScanner() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Seu navegador não suporta acesso à câmera.');
+        return;
+    }
+
     try {
+        console.log('Iniciando câmera...');
+        console.log('URL:', window.location.href);
+
         mostrarMensagemScanner(
-            'Solicitando acesso à câmera...',
+            'Solicitando permissão para acessar a câmera...',
             'info'
         );
 
-        cameraStream =
-            await obterStreamCameraPreferida();
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: {
+                    ideal: 'environment'
+                }
+            },
+            audio: false
+        });
+
+        console.log('Câmera obtida com sucesso');
 
         videoScanner.srcObject = cameraStream;
 
@@ -132,16 +148,23 @@ async function iniciarCameraScanner() {
         botaoPararScanner.disabled = false;
 
         mostrarMensagemScanner(
-            'Aponte para um QR Code',
-            'info'
+            'Câmera iniciada. Aponte para um QR Code.',
+            'sucesso'
         );
 
         processarFrameQRCode();
+
     } catch (erro) {
-        console.error(erro);
+        console.error('ERRO COMPLETO DA CÂMERA:', erro);
+
+        alert(
+            `Erro ao abrir a câmera:\n\n` +
+            `Nome: ${erro.name}\n` +
+            `Mensagem: ${erro.message}`
+        );
 
         mostrarMensagemScanner(
-            'Não foi possível acessar a câmera.',
+            `Erro: ${erro.name}`,
             'erro'
         );
     }
