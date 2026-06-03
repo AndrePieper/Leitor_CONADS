@@ -35,82 +35,62 @@ export function obterTokenAutenticacao() {
 export async function fazerRequisicaoPost(endpoint, dados) {
     const urlCompleta = CONFIG_API.URL_BASE + endpoint;
     const tokenAutenticacao = obterTokenAutenticacao();
+    const headers = {
+        'Content-Type': 'application/json',
+    };
+
+    if (tokenAutenticacao) {
+        headers['Authorization'] = `Bearer ${tokenAutenticacao}`;
+    }
 
     try {
-        const headers = {
-            'Content-Type': 'application/json',
-        };
-
-        if (tokenAutenticacao) {
-            headers['Authorization'] = `Bearer ${tokenAutenticacao}`;
-        }
-
         const resposta = await fetch(urlCompleta, {
             method: 'POST',
             headers,
             body: JSON.stringify(dados)
         });
 
-        const dadosResposta = await resposta.json();
+        const dadosResposta = await resposta.json().catch(() => null);
 
         if (!resposta.ok) {
-            const mensagemErro = dadosResposta.mensagem || dadosResposta.erro || 'Erro na requisição';
-            throw {
-                mensagem: mensagemErro,
-                status: resposta.status,
-                dados: dadosResposta
-            };
+            const mensagem = dadosResposta?.message || dadosResposta?.mensagem || dadosResposta?.erro || 'Erro ao processar requisição';
+            throw new Error(mensagem);
         }
 
         return dadosResposta;
     } catch (erro) {
-        if (erro.mensagem) {
-            throw erro;
-        }
-        throw {
-            mensagem: 'Erro ao conectar com o servidor. Verifique sua conexão.',
-            detalhes: erro.message
-        };
+        if (erro instanceof Error) throw erro;
+        throw new Error('Erro ao conectar com o servidor. Verifique sua conexão.');
     }
 }
 
 export async function fazerRequisicaoGet(endpoint) {
     const urlCompleta = CONFIG_API.URL_BASE + endpoint;
     const tokenAutenticacao = obterTokenAutenticacao();
+    const opcoes = {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    };
+
+    if (tokenAutenticacao) {
+        opcoes.headers['Authorization'] = `Bearer ${tokenAutenticacao}`;
+    }
 
     try {
-        const opcoes = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        };
-
-        if (tokenAutenticacao) {
-            opcoes.headers['Authorization'] = `Bearer ${tokenAutenticacao}`;
-        }
-
         const resposta = await fetch(urlCompleta, opcoes);
-        const dadosResposta = await resposta.json();
+        const dadosResposta = await resposta.json().catch(() => null);
 
         if (!resposta.ok) {
-            const mensagemErro = dadosResposta.mensagem || dadosResposta.erro || 'Erro na requisição';
-            throw {
-                mensagem: mensagemErro,
-                status: resposta.status,
-                dados: dadosResposta
-            };
+            const mensagem = dadosResposta?.message || dadosResposta?.mensagem || dadosResposta?.erro || 'Erro ao processar requisição';
+            throw new Error(mensagem);
         }
 
         return dadosResposta;
     } catch (erro) {
-        if (erro.mensagem) {
-            throw erro;
-        }
-        throw {
-            mensagem: 'Erro ao conectar com o servidor. Verifique sua conexão.',
-            detalhes: erro.message
-        };
+        if (erro instanceof Error) throw erro;
+        throw new Error('Erro ao conectar com o servidor. Verifique sua conexão.');
     }
 }
 

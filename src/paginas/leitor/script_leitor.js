@@ -1,6 +1,4 @@
-﻿import jsQR from 'jsqr';
-
-const botaoVoltar = document.getElementById('botao-voltar');
+﻿const botaoVoltar = document.getElementById('botao-voltar');
 const videoScanner = document.getElementById('video-scanner');
 const mensagemScanner = document.getElementById('mensagem-scanner');
 const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
@@ -158,6 +156,43 @@ async function processarFrameQRCode() {
     animationFrameId = setTimeout(processarFrameQRCode, 5000);
 }
 
+async function obterStreamCameraPreferida() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Seu navegador não suporta acesso à câmera.');
+    }
+
+    const opcoesAmbiente = {
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+    };
+
+    try {
+        return await navigator.mediaDevices.getUserMedia(opcoesAmbiente);
+    } catch (erro) {
+        console.warn('Falha usando facingMode environment:', erro);
+
+        if (!navigator.mediaDevices?.enumerateDevices) {
+            throw erro;
+        }
+
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoInputs = devices.filter(device => device.kind === 'videoinput');
+            for (const device of videoInputs) {
+                try {
+                    return await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: device.deviceId } }, audio: false });
+                } catch (innerErro) {
+                    console.warn(`Falha ao abrir câmera ${device.label || device.deviceId}:`, innerErro);
+                }
+            }
+        } catch (innerErro) {
+            console.warn('Falha ao enumerar dispositivos de vídeo:', innerErro);
+        }
+
+        throw erro;
+    }
+}
+
 async function iniciarCameraScanner() {
     if (!navigator.mediaDevices?.getUserMedia) {
         mostrarMensagemScanner('Seu navegador não suporta acesso à câmera.', 'erro');
@@ -165,12 +200,10 @@ async function iniciarCameraScanner() {
     }
 
     try {
-        // mensagem de abertura removida conforme solicitado
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' },
-            audio: false,
-        });
+        videoScanner?.setAttribute('playsinline', '');
+        videoScanner?.setAttribute('webkit-playsinline', '');
 
+        cameraStream = await obterStreamCameraPreferida();
         videoScanner.srcObject = cameraStream;
         await videoScanner.play();
 
@@ -178,7 +211,10 @@ async function iniciarCameraScanner() {
         processarFrameQRCode();
     } catch (erro) {
         console.error('Erro ao iniciar câmera:', erro);
-        mostrarMensagemScanner('Permissão negada ou câmera indisponível. Toque em Abrir câmera novamente e confirme o acesso.', 'erro');
+        const mensagem = erro?.name === 'NotAllowedError' || erro?.name === 'PermissionDeniedError'
+            ? 'Permissão negada para acessar a câmera. Confirme o acesso no navegador.'
+            : 'Câmera indisponível no momento. Tente novamente ou use outro navegador mobile.';
+        mostrarMensagemScanner(mensagem, 'erro');
     }
 }
 

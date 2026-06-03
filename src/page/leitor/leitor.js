@@ -3,7 +3,7 @@
 // ============================================
 
 import jsQR from 'jsqr';
-import { CONFIG_API, fazerRequisicaoPost } from '../../utils/api.js';
+import { CONFIG_API } from '../../utils/api.js';
 
 // ============================================
 // Elementos do DOM
@@ -23,9 +23,8 @@ const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
 let streamScanner = null;
 let scannerAtivo = false;
 let animationFrameId = null;
-let scanTimeoutId = null;
 const canvasQRCode = document.createElement('canvas');
-const contextoQRCode = canvasQRCode.getContext('2d');
+const contextoQRCode = canvasQRCode.getContext('2d', { willReadFrequently: true });
 
 function mostrarMensagemScanner(texto, tipo = 'info') {
     if (!mensagemScanner) return;
@@ -59,15 +58,36 @@ async function enviarPresencaCongresso(idChamada) {
         id_aluno: idAluno,
         tipo_presenca: 1,
     };
+    const url = CONFIG_API.URL_BASE + CONFIG_API.ENDPOINTS.PRESENCA_CONGRESSO;
 
     try {
-        const resposta = await fazerRequisicaoPost(CONFIG_API.ENDPOINTS.PRESENCA_CONGRESSO, dadosPresenca);
-        return { ok: true, status: 200, dados: resposta };
-    } catch (erro) {
-        if (erro.status === 404) {
-            return { ok: false, status: 404, mensagem: erro.mensagem || 'Endpoint de presença não encontrado.' };
+        const headers = { 'Content-Type': 'application/json' };
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        // Logando informações do POST para facilitar debug
+        console.info('Enviando POST de presença', {
+            url,
+            headers: Object.assign({}, headers, { Authorization: headers.Authorization ? '***REDACTED***' : undefined }),
+            payload: dadosPresenca,
+        });
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(dadosPresenca),
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok) {
+            throw new Error(data?.message || data?.mensagem || 'Erro genérico');
         }
-        return { ok: false, status: erro.status || null, mensagem: erro.mensagem || 'Erro ao enviar presença.' };
+
+        return { ok: true, status: res.status, dados: data };
+    } catch (error) {
+        console.error('Falha no POST de presença:', error?.message || error);
+        return { ok: false, status: null, mensagem: error?.message || 'Erro ao enviar presença.' };
     }
 }
 
@@ -75,13 +95,8 @@ function pararScannerQRCode() {
     scannerAtivo = false;
 
     if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
+        clearTimeout(animationFrameId);
         animationFrameId = null;
-    }
-
-    if (scanTimeoutId) {
-        clearTimeout(scanTimeoutId);
-        scanTimeoutId = null;
     }
 
     if (streamScanner) {
@@ -105,42 +120,50 @@ async function processarFrameQRCode() {
     }
 
     if (!videoScanner || videoScanner.readyState !== HTMLMediaElement.HAVE_ENOUGH_DATA) {
-        // vídeo ainda não pronto, tentar novamente em 1s
-        scanTimeoutId = setTimeout(processarFrameQRCode, 1000);
+        animationFrameId = setTimeout(processarFrameQRCode, 5000);
         return;
     }
 
-    canvasQRCode.width = videoScanner.videoWidth;
-    canvasQRCode.height = videoScanner.videoHeight;
-    contextoQRCode.drawImage(videoScanner, 0, 0, canvasQRCode.width, canvasQRCode.height);
+    if (videoScanner.videoWidth === 0 || videoScanner.videoHeight === 0) {
+        animationFrameId = setTimeout(processarFrameQRCode, 5000);
+        return;
+    }
+
+    const maxScanWidth = 640;
+    const aspectRatio = videoScanner.videoWidth / videoScanner.videoHeight;
+    const scanWidth = Math.min(videoScanner.videoWidth, maxScanWidth);
+    const scanHeight = Math.round(scanWidth / aspectRatio);
+
+    canvasQRCode.width = scanWidth;
+    canvasQRCode.height = scanHeight;
+    contextoQRCode.drawImage(videoScanner, 0, 0, scanWidth, scanHeight);
 
     let imageData;
     try {
         imageData = contextoQRCode.getImageData(0, 0, canvasQRCode.width, canvasQRCode.height);
     } catch (e) {
         console.warn('Erro ao capturar frame:', e);
-        scanTimeoutId = setTimeout(processarFrameQRCode, 1000);
+        animationFrameId = setTimeout(processarFrameQRCode, 5000);
         return;
     }
 
     const codigoQR = jsQR(imageData.data, imageData.width, imageData.height);
 
     if (!codigoQR?.data) {
-        // nenhum QR detectado, tentar novamente em 5s
-        scanTimeoutId = setTimeout(processarFrameQRCode, 5000);
+        animationFrameId = setTimeout(processarFrameQRCode, 5000);
         return;
     }
 
     const idChamada = extrairIdChamadaDoQRCode(codigoQR.data);
     if (!idChamada) {
         mostrarMensagemScanner('QR detectado, mas id_chamada não foi encontrado.', 'erro');
-        scanTimeoutId = setTimeout(processarFrameQRCode, 5000);
+        animationFrameId = setTimeout(processarFrameQRCode, 5000);
         return;
     }
 
     // pausar novas leituras enquanto envia
     scannerAtivo = false;
-    mostrarMensagemScanner('Enviando presença...', 'info');
+    mostrarMensagemScanner('QR lido. Enviando presença...', 'info');
 
     const resultado = await enviarPresencaCongresso(idChamada);
 
@@ -153,7 +176,41 @@ async function processarFrameQRCode() {
     // erro no envio: mostrar mensagem e retomar tentativas
     mostrarMensagemScanner(resultado.mensagem || 'Erro ao enviar presença.', 'erro');
     scannerAtivo = true;
-    scanTimeoutId = setTimeout(processarFrameQRCode, 5000);
+    animationFrameId = setTimeout(processarFrameQRCode, 5000);
+}
+
+async function obterStreamCameraPreferida() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Seu navegador não suporta acesso à câmera.');
+    }
+
+    const opcoesAmbiente = { video: { facingMode: { ideal: 'environment' } }, audio: false };
+
+    try {
+        return await navigator.mediaDevices.getUserMedia(opcoesAmbiente);
+    } catch (erro) {
+        console.warn('Falha usando facingMode environment:', erro);
+
+        if (!navigator.mediaDevices?.enumerateDevices) {
+            throw erro;
+        }
+
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoInputs = devices.filter(device => device.kind === 'videoinput');
+            for (const device of videoInputs) {
+                try {
+                    return await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: device.deviceId } }, audio: false });
+                } catch (innerErro) {
+                    console.warn(`Falha ao abrir câmera ${device.label || device.deviceId}:`, innerErro);
+                }
+            }
+        } catch (innerErro) {
+            console.warn('Falha ao enumerar dispositivos de vídeo:', innerErro);
+        }
+
+        throw erro;
+    }
 }
 
 async function iniciarScannerQRCode() {
@@ -163,8 +220,10 @@ async function iniciarScannerQRCode() {
     }
 
     try {
-        // mensagem de abertura removida conforme solicitado
-        streamScanner = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        videoScanner?.setAttribute('playsinline', '');
+        videoScanner?.setAttribute('webkit-playsinline', '');
+
+        streamScanner = await obterStreamCameraPreferida();
         videoScanner.srcObject = streamScanner;
         await videoScanner.play();
 
@@ -175,7 +234,10 @@ async function iniciarScannerQRCode() {
         processarFrameQRCode();
     } catch (erro) {
         console.error('Erro ao iniciar scanner:', erro);
-        mostrarMensagemScanner('Permissão negada ou câmera indisponível. Use o botão para tentar novamente.', 'erro');
+        const mensagem = erro?.name === 'NotAllowedError' || erro?.name === 'PermissionDeniedError'
+            ? 'Permissão negada para acessar a câmera. Confirme o acesso no navegador.'
+            : 'Câmera indisponível no momento. Tente novamente ou use outro navegador mobile.';
+        mostrarMensagemScanner(mensagem, 'erro');
     }
 }
 

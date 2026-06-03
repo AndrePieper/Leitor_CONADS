@@ -43,7 +43,7 @@
                 <div class="secao-scanner">
                     <h3>Leitor QR Code</h3>
                     <div class="scanner-area">
-                        <video id="video-scanner" autoplay playsinline muted></video>
+                        <video id="video-scanner" autoplay playsinline webkit-playsinline muted></video>
                         <div id="mensagem-scanner" class="mensagem-scanner">Aguardando permissão da câmera...</div>
                     </div>
                 </div>
@@ -140,6 +140,7 @@
         </aside>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script type="module" src="script_leitor.js"></script>
 </body>
 </html>

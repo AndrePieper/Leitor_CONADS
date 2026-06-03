@@ -72,7 +72,7 @@ async function processarLogin() {
         await realizarRedirecionamentoParaHome(resposta, email);
     } catch (erro) {
         console.log('Erro no login:', erro);
-        mostrarErro(erro.mensagem || 'Erro ao fazer login. Tente novamente.');
+        mostrarErro(erro.message || 'Erro ao fazer login. Tente novamente.');
         limparCampos();
     } finally {
         desabilitarBotaoEntrar(false);
