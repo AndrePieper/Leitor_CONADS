@@ -1,4 +1,6 @@
 ﻿const botaoVoltar = document.getElementById('botao-voltar');
+const botaoIniciarScanner = document.getElementById('botao-iniciar-scanner');
+const botaoPararScanner = document.getElementById('botao-parar-scanner');
 const videoScanner = document.getElementById('video-scanner');
 const mensagemScanner = document.getElementById('mensagem-scanner');
 const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
@@ -67,26 +69,37 @@ async function enviarPresencaCongresso(idChamada) {
     }
 }
 
-function pararCameraScanner() {
-    scannerAtivo = false;
-
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
+async function iniciarCameraScanner() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+        mostrarMensagemScanner('Seu navegador não suporta acesso à câmera.', 'erro');
+        return;
     }
 
-    if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-    }
+    try {
+        videoScanner?.setAttribute('playsinline', '');
+        videoScanner?.setAttribute('webkit-playsinline', '');
 
-    if (videoScanner) {
-        videoScanner.pause();
-        videoScanner.srcObject = null;
+        botaoIniciarScanner?.setAttribute('disabled', 'true');
+        botaoPararScanner?.removeAttribute('disabled');
+
+        cameraStream = await obterStreamCameraPreferida();
+        videoScanner.srcObject = cameraStream;
+        await videoScanner.play();
+
+        scannerAtivo = true;
+        processarFrameQRCode();
+    } catch (erro) {
+        console.error('Erro ao iniciar câmera:', erro);
+        botaoIniciarScanner?.removeAttribute('disabled');
+        botaoPararScanner?.setAttribute('disabled', 'true');
+        const mensagem = erro?.name === 'NotAllowedError' || erro?.name === 'PermissionDeniedError'
+            ? 'Permissão negada para acessar a câmera. Confirme o acesso no navegador.'
+            : 'Câmera indisponível no momento. Tente novamente ou use outro navegador mobile.';
+        mostrarMensagemScanner(mensagem, 'erro');
     }
 }
 
-async function processarFrameQRCode() {
+function verificarAutenticacaoLeitor() {
     if (!scannerAtivo) return;
 
     if (typeof jsQR !== 'function' && !barcodeDetector) {
@@ -243,11 +256,8 @@ function inicializarPaginaLeitor() {
         return;
     }
 
-    if (botaoVoltar) {
-        botaoVoltar.addEventListener('click', voltarParaHome);
-    }
-
-    iniciarCameraScanner();
+    inicializarEventosLeitor();
+    mostrarMensagemScanner('Toque em Iniciar câmera para pedir permissão ao navegador.', 'info');
 }
 
 document.addEventListener('DOMContentLoaded', inicializarPaginaLeitor);
