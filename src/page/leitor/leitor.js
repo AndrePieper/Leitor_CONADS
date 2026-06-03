@@ -23,7 +23,6 @@ const usuarioLeitorInfo = document.getElementById('usuario-leitor-info');
 let streamScanner = null;
 let scannerAtivo = false;
 let animationFrameId = null;
-let facingMode = 'environment';
 const canvasQRCode = document.createElement('canvas');
 const contextoQRCode = canvasQRCode.getContext('2d', { willReadFrequently: true });
 
@@ -189,89 +188,37 @@ async function processarFrameQRCode() {
     animationFrameId = requestAnimationFrame(processarFrameQRCode);
 }
 
-async function obterStreamCameraPreferida() {
-    if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error('Seu navegador não suporta acesso à câmera.');
-    }
-    const opcoes = { video: { facingMode: { ideal: facingMode } }, audio: false };
-
-    try {
-        return await navigator.mediaDevices.getUserMedia(opcoes);
-    } catch (erro) {
-        console.warn('Falha usando facingMode environment:', erro);
-
-        if (!navigator.mediaDevices?.enumerateDevices) {
-            throw erro;
-        }
-
-        try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoInputs = devices.filter(device => device.kind === 'videoinput');
-            for (const device of videoInputs) {
-                try {
-                    return await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: device.deviceId } }, audio: false });
-                } catch (innerErro) {
-                    console.warn(`Falha ao abrir câmera ${device.label || device.deviceId}:`, innerErro);
-                }
-            }
-        } catch (innerErro) {
-            console.warn('Falha ao enumerar dispositivos de vídeo:', innerErro);
-        }
-
-        throw erro;
-    }
-}
-
+// Replicado do padrão React que funciona perfeitamente
 async function iniciarScannerQRCode() {
-    if (!navigator.mediaDevices?.getUserMedia) {
-        mostrarMensagemScanner('Seu navegador não suporta acesso à câmera.', 'erro');
-        return;
-    }
-
     try {
+        // Simples e direto como no React
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        
         videoScanner?.setAttribute('playsinline', '');
         videoScanner?.setAttribute('webkit-playsinline', '');
-        botaoIniciarScanner?.setAttribute('disabled', 'true');
-        botaoPararScanner?.removeAttribute('disabled');
-
-        // abrir stream com o facingMode atual
-        streamScanner = await obterStreamCameraPreferida();
-        videoScanner.srcObject = streamScanner;
+        videoScanner.srcObject = stream;
         await videoScanner.play();
 
-        // mostrar botão de troca de câmera quando houver mais de uma
-        try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoInputs = devices.filter(d => d.kind === 'videoinput');
-            if (videoInputs.length > 1) botaoTrocarCamera?.classList.remove('oculto');
-        } catch (e) {
-            // ignore
-        }
-
+        streamScanner = stream;
         scannerAtivo = true;
         botaoIniciarScanner?.setAttribute('disabled', 'true');
         botaoPararScanner?.removeAttribute('disabled');
 
+        mostrarMensagemScanner('Câmera aberta. Posicione o QR code.', 'info');
         processarFrameQRCode();
     } catch (erro) {
-        console.error('Erro ao iniciar scanner:', erro);
+        console.error('Erro ao iniciar câmera:', erro);
+        
         if (erro?.name === 'NotAllowedError' || erro?.name === 'PermissionDeniedError') {
-            mostrarMensagemScanner('Permissão negada para acessar a câmera. Confirme o acesso nas configurações do navegador.', 'erro');
-        } else if (erro?.name === 'NotFoundError' || erro?.name === 'OverconstrainedError') {
-            mostrarMensagemScanner('Câmera não encontrada neste dispositivo.', 'erro');
+            mostrarMensagemScanner('❌ Permissão negada. Abra as configurações do navegador e permita acesso à câmera.', 'erro');
+        } else if (erro?.name === 'NotFoundError') {
+            mostrarMensagemScanner('❌ Câmera não encontrada neste dispositivo.', 'erro');
         } else {
-            mostrarMensagemScanner('Câmera indisponível no momento. Tente novamente ou use outro navegador.', 'erro');
+            mostrarMensagemScanner('❌ Erro ao acessar câmera: ' + (erro?.message || 'desconhecido'), 'erro');
         }
-    }
-}
-
-function trocarCamera() {
-    facingMode = facingMode === 'environment' ? 'user' : 'environment';
-    // reiniciar stream se já estava ativo
-    if (streamScanner) {
-        pararScannerQRCode();
-        // pequena espera para garantir que tracks parem
-        setTimeout(() => iniciarScannerQRCode(), 250);
+        
+        botaoIniciarScanner?.removeAttribute('disabled');
+        botaoPararScanner?.setAttribute('disabled', 'true');
     }
 }
 
@@ -302,10 +249,6 @@ function inicializarEventosLeitor() {
     botaoVisivel?.addEventListener('click', iniciarScannerQRCode);
     botaoIniciarScanner?.addEventListener('click', iniciarScannerQRCode);
     botaoPararScanner?.addEventListener('click', pararScannerQRCode);
-    const btnTrocar = document.getElementById('botao-trocar-camera');
-    btnTrocar?.addEventListener('click', trocarCamera);
-    // expose for other parts
-    window.botaoTrocarCamera = btnTrocar;
 }
 
 function inicializarPaginaLeitor() {
