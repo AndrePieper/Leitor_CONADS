@@ -16,10 +16,13 @@
 
                 <div class="camera-card">
                     <div class="camera-frame">
-                        <video id="video-scanner" autoplay playsinline muted></video>
+                        <video id="video-scanner" autoplay playsinline webkit-playsinline muted></video>
                     </div>
                     <div id="mensagem-scanner" class="mensagem-scanner">Aguardando QR code...</div>
                 </div>
+
+                <button id="botao-iniciar-scanner-visivel" class="botao-primario">🎥 Abrir câmera</button>
+                <button id="botao-trocar-camera" class="botao-secundario oculto">🔁 Trocar câmera</button>
 
                 <button id="botao-voltar" class="botao-primario">Voltar</button>
             </div>

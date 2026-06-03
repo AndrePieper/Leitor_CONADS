@@ -101,6 +101,26 @@ body {
     box-shadow: 0 16px 32px rgba(15, 123, 46, 0.24);
 }
 
+.botao-secundario {
+    width: 100%;
+    padding: 12px 16px;
+    background: #ffffff;
+    color: #0f7b2e;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 12px;
+}
+
+.botao-secundario:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(15, 123, 46, 0.12);
+}
+
+.oculto { display: none !important; }
+
 .oculto-ids {
     display: none !important;
 }
